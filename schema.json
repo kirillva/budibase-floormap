@@ -1,0 +1,52 @@
+{
+  "type": "component",
+  "metadata": {},
+  "schema": {
+    "name": "map",
+    "friendlyName": "map",
+    "description": "An amazing Budibase component!",
+    "icon": "Text",
+    "settings": [
+      {
+        "type": "dataProvider",
+        "key": "floorProvider",
+        "label": "Floors"
+      },
+      
+      {
+        "type": "dataProvider",
+        "key": "zoneProvider",
+        "label": "Zones"
+      },
+      {
+        "type": "event",
+        "key": "onChangeZone",
+        "label": "Change zone",
+        "context": [
+          {
+            "label": "Zone data",
+            "type": "json",
+            "key": "item"
+          }
+        ]
+      },
+      {
+        "type": "dataProvider",
+        "key": "sensorProvider",
+        "label": "Sensors"
+      },
+      {
+        "type": "event",
+        "key": "onChangeSensor",
+        "label": "Change sensor",
+        "context": [
+          {
+            "label": "Sensor data",
+            "type": "json",
+            "key": "item"
+          }
+        ]
+      }
+    ]
+  }
+}
