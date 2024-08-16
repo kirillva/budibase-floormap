@@ -18,59 +18,58 @@ import * as d3 from "d3v4";
 import contextMenu from "./d3-context-menu.js";
 
 export default function floorplan() {
-    var layers = [],
-        panZoomEnabled = true,
-        maxZoom = 5,
-        toolsWidth = 95,
-        xScale = d3.scaleLinear(),
-        yScale = d3.scaleLinear(),
-        mapdata = {},
-        svgCanvas = null,
-        g = null;
+    var layers = []
+        // panZoomEnabled = true,
+        // maxZoom = 5,
+        // toolsWidth = 95,
+        // xScale = d3.scaleLinear(),
+        // yScale = d3.scaleLinear(),
+        // svgCanvas = null,
+        // g = null;
 
     function map() {
         return this
     }
 
-    map.xScale = function (scale) {
-        if (!arguments.length) return xScale;
-        xScale = scale;
-        layers.forEach(function (l) {
-            l.xScale(xScale);
-        });
-        return map;
-    };
+    // map.xScale = function (scale) {
+    //     if (!arguments.length) return xScale;
+    //     xScale = scale;
+    //     layers.forEach(function (l) {
+    //         l.xScale(xScale);
+    //     });
+    //     return map;
+    // };
 
-    map.yScale = function (scale) {
-        if (!arguments.length) return yScale;
-        yScale = scale;
-        layers.forEach(function (l) {
-            l.yScale(yScale);
-        });
-        return map;
-    };
+    // map.yScale = function (scale) {
+    //     if (!arguments.length) return yScale;
+    //     yScale = scale;
+    //     layers.forEach(function (l) {
+    //         l.yScale(yScale);
+    //     });
+    //     return map;
+    // };
 
-    map.maxZoom = function (zoom) {
-        if (!arguments.length) return maxZoom;
-        maxZoom = zoom;
-        return map;
-    };
+    // map.maxZoom = function (zoom) {
+    //     if (!arguments.length) return maxZoom;
+    //     maxZoom = zoom;
+    //     return map;
+    // };
 
-    map.layersWidth = function (width) {
-        if (!arguments.length) return toolsWidth;
-        toolsWidth = width;
-        return map;
-    };
+    // map.layersWidth = function (width) {
+    //     if (!arguments.length) return toolsWidth;
+    //     toolsWidth = width;
+    //     return map;
+    // };
 
-    map.panZoom = function (enabled) {
-        if (!arguments.length) return panZoomEnabled;
-        panZoomEnabled = enabled;
-        return map;
-    };
+    // map.panZoom = function (enabled) {
+    //     if (!arguments.length) return panZoomEnabled;
+    //     panZoomEnabled = enabled;
+    //     return map;
+    // };
 
     map.addLayer = function (layer, index) {
-        layer.xScale(xScale);
-        layer.yScale(yScale);
+        // layer.xScale(xScale);
+        // layer.yScale(yScale);
 
         if (arguments.length > 1 && index >= 0) {
             layers.splice(index, 0, layer);
@@ -352,7 +351,10 @@ export default function floorplan() {
 
 
             // on setting points if mousedown on a handle
-            if (d3.event.target.hasAttribute("handle")) {
+
+            // console.log('target', d3.event.target);
+            if (d3.event.target.hasAttribute("handle") || d3.event.target.classList.contains('handle')) {
+                // console.log("completePolygon()")
                 completePolygon()
             }
 
@@ -360,7 +362,7 @@ export default function floorplan() {
 
         //on mousemove - appending SVG line elements to the points
         function drawline() {
-
+            // console.log('drawline', drawline)
             if (isDrawing) {
                 linePoint2 = d3.mouse(this);
                 gContainer.select('line').remove();
@@ -404,7 +406,7 @@ export default function floorplan() {
             polyPoints.splice(polyPoints.length - 1);
             //console.log(polyPoints);
 
-            polyEl = gPoly.append("polygon")
+            var polyEl = gPoly.append("polygon")
                 .attr("points", polyPoints);
 
             for (var i = 0; i < polyPoints.length; i++) {

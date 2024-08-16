@@ -24,7 +24,7 @@
         "label": "Change zone",
         "context": [
           {
-            "label": "Zone data",
+            "label": "item",
             "type": "json",
             "key": "item"
           }
@@ -41,7 +41,7 @@
         "label": "Change sensor",
         "context": [
           {
-            "label": "Sensor data",
+            "label": "item",
             "type": "json",
             "key": "item"
           }
