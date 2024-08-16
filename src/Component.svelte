@@ -4,6 +4,7 @@
     import { onMount } from "svelte";
     import { uuid } from "./Helpers";
     import floorplan from "./floorplan";
+    import BluetoothIcon from "../lib/bluetooth.svg";
 
     const { styleable, ...props } = getContext("sdk");
     const component = getContext("component");
@@ -44,7 +45,7 @@
             _id: item._id,
             id: `${item.id}`,
             name: item.name,
-            url: "https://downloader.disk.yandex.ru/preview/08ec0d6f7d5c522852815f84e4b306c0545da3579aa9b2d36749b91d39d2c842/66bcbdd5/GhJ_fdI2XUodsVy8VndYamz3Lm1fk46Qg4Hpobu0Ydc83q9eLZ_fPBthjGhI-IE3BD_QrvGet8W_lRPhSVnsMw%3D%3D?uid=0&filename=bluetooth_logo.png&disposition=inline&hash=&limit=0&content_type=image%2Fpng&owner_uid=0&tknv=v2&size=2048x2048",
+            image: BluetoothIcon,
             x: item.x,
             y: item.y,
             w: 32,
@@ -53,11 +54,11 @@
 
 
     function onCreateSensor() {
-        console.log('onCreateSensor');
+        // console.log('onCreateSensor');
         var sensor = {
             id: uuid(),
             name: uuid(),
-            url: "https://downloader.disk.yandex.ru/preview/08ec0d6f7d5c522852815f84e4b306c0545da3579aa9b2d36749b91d39d2c842/66bcbdd5/GhJ_fdI2XUodsVy8VndYamz3Lm1fk46Qg4Hpobu0Ydc83q9eLZ_fPBthjGhI-IE3BD_QrvGet8W_lRPhSVnsMw%3D%3D?uid=0&filename=bluetooth_logo.png&disposition=inline&hash=&limit=0&content_type=image%2Fpng&owner_uid=0&tknv=v2&size=2048x2048",
+            image: BluetoothIcon,
             x: 50,
             y: 50,
             w: 32,
@@ -68,7 +69,6 @@
     }
 
     function onCreateZone() {
-        console.log('onCreateZone');
         var zonePolyPoints = [];
         var zone = {
             id: uuid(),
@@ -106,7 +106,6 @@
             .extent([[0, 0], [width, height]])
             .on("zoom", zoomed);
 
-        debugger;
         svg.call(zoom);
     });
 

@@ -570,12 +570,23 @@ export default function floorplan() {
 
         // ENTER
         // Create new elements as needed.
-        var image = gSensorContainer.append("image")
+
+        if (sensor.image) {
+            var image = new DOMParser().parseFromString(sensor.image, 'text/html').body.childNodes[0];
+            image.setAttribute('x', sensor.x);
+            image.setAttribute('y', sensor.y);
+            image.setAttribute('width', sensor.w);
+            image.setAttribute('height', sensor.h);
+            gSensorContainer.node().appendChild(image);
+        }
+        if (sensor.url) {
+            var image = gSensorContainer.append("image")
             .attr("xlink:href", sensor.url)
             .attr("x", sensor.x)
             .attr("y", sensor.y)
             .attr("width", sensor.w)
             .attr("height", sensor.h);
+        }
 
         // Set translate variable defaults;
         gSensorContainer.datum({
@@ -597,7 +608,7 @@ export default function floorplan() {
         }));
 
         // Add context menu
-        image.on('contextmenu', contextMenu(menu));
+        // image.on('contextmenu', contextMenu(menu));
     };
 
     return map;
