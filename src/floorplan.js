@@ -138,7 +138,7 @@ export default function floorplan() {
         text.exit().remove();
     };
 
-    map.zonePolygons = function (svgCanvas, zones) {
+    map.zonePolygons = function (svgCanvas, zones, onSelectZone) {
 
         // Context menu
         var menu = [
@@ -221,6 +221,7 @@ export default function floorplan() {
 
                 // Add context menu
                 gPoly.on('contextmenu', contextMenu(menu));
+                gPoly.on('click', () => onSelectZone && onSelectZone({id: zone.id}));
 
                 // Add label text
                 var gPolyCentroid = d3.polygonCentroid(polyPoints);
@@ -345,7 +346,7 @@ export default function floorplan() {
                 .attr("cx", linePoint1.x)
                 .attr("cy", linePoint1.y)
                 .attr("r", 4)
-                .attr("start-point", true)
+                .attr("start-point", polyPoints.length == 1 ? true : false)
                 .classed("handle", true)
                 .style("cursor", "pointer");
 
@@ -353,7 +354,7 @@ export default function floorplan() {
             // on setting points if mousedown on a handle
 
             // console.log('target', d3.event.target);
-            if (d3.event.target.hasAttribute("handle") || d3.event.target.classList.contains('handle')) {
+            if (d3.event.target.getAttribute('start-point') == 'true') {
                 // console.log("completePolygon()")
                 completePolygon()
             }

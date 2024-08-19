@@ -12,9 +12,13 @@
     export let floorProvider;
     export let zoneProvider;
     export let sensorProvider;
+
     export let onChangeZone;
+    export let onSelectZone;
+
     export let onChangeSensor;
-    
+    export let onSelectSensor;
+
     let svg;
     let g;
 
@@ -97,7 +101,7 @@
         g = svg.append("g");
 
         map.imageLayers(g, floors);
-        map.zonePolygons(g, zones);
+        map.zonePolygons(g, zones, onSelectZone);
         drawSensors({ map, g, floors, items: sensors });
 
         var zoom = d3.zoom()

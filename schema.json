@@ -1,52 +1,81 @@
 {
-  "type": "component",
-  "metadata": {},
-  "schema": {
-    "name": "map",
-    "friendlyName": "map",
-    "description": "An amazing Budibase component!",
-    "icon": "Text",
-    "settings": [
-      {
-        "type": "dataProvider",
-        "key": "floorProvider",
-        "label": "Floors"
-      },
-      
-      {
-        "type": "dataProvider",
-        "key": "zoneProvider",
-        "label": "Zones"
-      },
-      {
-        "type": "event",
-        "key": "onChangeZone",
-        "label": "Change zone",
-        "context": [
-          {
-            "label": "item",
-            "type": "json",
-            "key": "item"
-          }
+    "type": "component",
+    "metadata": {},
+    "schema": {
+        "name": "map",
+        "friendlyName": "map",
+        "description": "An amazing Budibase component!",
+        "icon": "Text",
+        "settings": [
+            {
+                "section": true,
+                "name": "Floors",
+                "settings": [
+                    {
+                        "type": "dataProvider",
+                        "key": "floorProvider",
+                        "label": "Floors"
+                    }
+                ]
+            },
+            {
+                "section": true,
+                "name": "Zones",
+                "settings": [
+                    {
+                        "type": "dataProvider",
+                        "key": "zoneProvider",
+                        "label": "Zones"
+                    },
+                    {
+                        "type": "event",
+                        "key": "onChangeZone",
+                        "label": "Change zone",
+                        "context": [
+                            {
+                                "label": "item",
+                                "type": "json",
+                                "key": "item"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "event",
+                        "key": "onSelectZone",
+                        "label": "Select zone",
+                        "context": [
+                            {
+                                "label": "id",
+                                "type": "text",
+                                "key": "id"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "section": true,
+                "name": "Sensors",
+                "settings": [
+                    {
+                        "type": "dataProvider",
+                        "key": "sensorProvider",
+                        "label": "Sensors"
+                    },
+                    {
+                        "type": "event",
+                        "key": "onChangeSensor",
+                        "label": "Change sensor",
+                        "context": [
+                            {
+                                "label": "item",
+                                "type": "json",
+                                "key": "item"
+                            }
+                        ]
+                    }
+                ]
+            }
         ]
-      },
-      {
-        "type": "dataProvider",
-        "key": "sensorProvider",
-        "label": "Sensors"
-      },
-      {
-        "type": "event",
-        "key": "onChangeSensor",
-        "label": "Change sensor",
-        "context": [
-          {
-            "label": "item",
-            "type": "json",
-            "key": "item"
-          }
-        ]
-      }
-    ]
-  }
+    }
 }
