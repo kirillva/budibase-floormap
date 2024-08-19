@@ -1,0 +1,7 @@
+g.polygon.selected > polygon {
+    fill: red;
+}
+
+g.polygon.selected > circle {
+    fill: red;
+}

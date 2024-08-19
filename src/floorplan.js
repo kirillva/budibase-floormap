@@ -15,6 +15,7 @@
 //
 
 import * as d3 from "d3v4";
+import "./floorplan.css";
 import contextMenu from "./d3-context-menu.js";
 
 export default function floorplan() {
@@ -159,6 +160,15 @@ export default function floorplan() {
             }
         ];
 
+        function selectPolygon(id) {
+            d3.selectAll('.polygon').classed("selected", false);
+            d3.select(`.zone-${id}`).classed("selected", true);
+            // // console.log('allPolygons', allPolygons);
+            if (onSelectZone) {
+                onSelectZone({id: id})
+            }
+        }
+
         zones.forEach(function (zone) {
             var gPoly;
             var polyPoints = zone.points;
@@ -221,7 +231,7 @@ export default function floorplan() {
 
                 // Add context menu
                 gPoly.on('contextmenu', contextMenu(menu));
-                gPoly.on('click', () => onSelectZone && onSelectZone({id: zone.id}));
+                gPoly.on('click', () => selectPolygon(zone.id));
 
                 // Add label text
                 var gPolyCentroid = d3.polygonCentroid(polyPoints);

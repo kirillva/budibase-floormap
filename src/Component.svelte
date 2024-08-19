@@ -173,6 +173,7 @@
     }
 </script>
 
+
 <div use:styleable={$component.styles}>
     <button on:click={onCreateZone}>Create Zone</button>
     <button on:click={onCreateSensor}>Place sensor</button>
