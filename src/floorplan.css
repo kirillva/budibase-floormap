@@ -1,7 +1,20 @@
-g.polygon.selected > polygon {
-    fill: red;
+g.polygon > polygon {
+    fill: var(--spectrum-global-color-gray-400);
+    stroke: #8f8f8f;
+    stroke-width: 2px;
+    fill-opacity: 0.2;
+}
+g.polygon > circle {
+    cursor: pointer;
+    stroke: #8f8f8f;
+    stroke-width: 2px;
+    fill-opacity: 0.2;
 }
 
-g.polygon.selected > circle {
-    fill: red;
+g.polygon.selected > polygon {
+    fill: var(--primaryColor);
+}
+
+g.polygon > circle:hover {
+    stroke: var(--primaryColor)
 }

@@ -75,6 +75,12 @@
                         ]
                     }
                 ]
+            },
+            {
+                "section": true,
+                "name": "Buttons",
+                "settings": [
+                ]
             }
         ]
     }

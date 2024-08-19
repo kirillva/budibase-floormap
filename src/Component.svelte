@@ -8,7 +8,7 @@
 
     const { styleable, ...props } = getContext("sdk");
     const component = getContext("component");
-    
+
     export let floorProvider;
     export let zoneProvider;
     export let sensorProvider;
@@ -36,7 +36,7 @@
             },
         })) ?? [];
 
-    const zones =
+    $: zones =
         zoneProvider?.rows?.map((item) => ({
             _id: item._id,
             id: `${item.id}`,
@@ -44,7 +44,7 @@
             points: JSON.parse(item.points),
         })) ?? [];
 
-    const sensors =
+    $: sensors =
         sensorProvider?.rows?.map((item) => ({
             _id: item._id,
             id: `${item.id}`,
@@ -55,7 +55,6 @@
             w: 32,
             h: 32,
         })) ?? [];
-
 
     function onCreateSensor() {
         // console.log('onCreateSensor');
@@ -84,30 +83,52 @@
     }
 
     function drawSensors({ map, g, floors, items }) {
-        items.forEach(item=>{
+        items.forEach((item) => {
             new map.sensorImageLayer(g, floors[0], item);
-        })
+        });
     }
-    
+
     function zoomed() {
         g.attr("transform", d3.event.transform);
-    }  
+    }
 
-    var map = floorplan(); 
-    onMount(async () => {
-        svg = d3.select("#main");
-        const width = +svg.attr("width");
-        const height = +svg.attr("height");
+    var map = floorplan();
+
+    function update(zones, floors, sensors) {
+        if (!svg || svg.empty()) return;
+
+        d3.selectAll('svg.map>g').remove();
+
         g = svg.append("g");
 
         map.imageLayers(g, floors);
         map.zonePolygons(g, zones, onSelectZone);
         drawSensors({ map, g, floors, items: sensors });
+    }
 
-        var zoom = d3.zoom()
+    $: {
+        update(zones, floors, sensors);
+    }
+
+    onMount(async () => {
+        svg = d3.select("#main");
+        
+        const width = +svg.attr("width");
+        const height = +svg.attr("height");
+
+        update(zones, floors, sensors);
+
+        var zoom = d3
+            .zoom()
             .scaleExtent([1, Infinity])
-            .translateExtent([[0, 0], [width, height]])
-            .extent([[0, 0], [width, height]])
+            .translateExtent([
+                [0, 0],
+                [width, height],
+            ])
+            .extent([
+                [0, 0],
+                [width, height],
+            ])
             .on("zoom", zoomed);
 
         svg.call(zoom);
@@ -147,7 +168,7 @@
         }
 
         // sensors
-        const sensorsData = []
+        const sensorsData = [];
         sensors.forEach((item) => {
             var sensor = d3.select(`.sensor-${item.id}`);
 
@@ -158,25 +179,47 @@
                 id: item.id,
                 name: item.name,
                 x: item.x + position.x,
-                y: item.y + position.y
+                y: item.y + position.y,
             };
             sensorsData.push(obj);
         });
         if (onChangeSensor) {
             sensorsData.forEach((item) => {
                 onChangeSensor({
-                    item: item
+                    item: item,
                 });
             });
         }
-        
     }
 </script>
 
-
 <div use:styleable={$component.styles}>
-    <button on:click={onCreateZone}>Create Zone</button>
-    <button on:click={onCreateSensor}>Place sensor</button>
-    <button on:click={onSave}>Save</button>
-    <svg id="main" width="900" height="600"></svg>
+    <div class="buttons">
+        <button
+            class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
+            on:click={onCreateZone}>Create Zone</button
+        >
+        <button
+            class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
+            on:click={onCreateSensor}>Place sensor</button
+        >
+        <button
+            class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
+            on:click={onSave}>Save</button
+        >
+    </div>
+
+    <svg class="map" id="main" width="900" height="600"></svg>
 </div>
+
+
+<style>
+    .buttons {
+        display: flex;
+        position: absolute;
+        gap: 4px;
+    }
+    .map {
+        margin: 30px;
+    }
+</style>

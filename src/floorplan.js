@@ -160,12 +160,13 @@ export default function floorplan() {
             }
         ];
 
-        function selectPolygon(id) {
+        function selectPolygon(zone) {
             d3.selectAll('.polygon').classed("selected", false);
-            d3.select(`.zone-${id}`).classed("selected", true);
+            d3.select(`.zone-${zone.id}`).classed("selected", true);
+
             // // console.log('allPolygons', allPolygons);
             if (onSelectZone) {
-                onSelectZone({id: id})
+                onSelectZone(zone)
             }
         }
 
@@ -231,7 +232,7 @@ export default function floorplan() {
 
                 // Add context menu
                 gPoly.on('contextmenu', contextMenu(menu));
-                gPoly.on('click', () => selectPolygon(zone.id));
+                gPoly.on('click', () => selectPolygon(zone));
 
                 // Add label text
                 var gPolyCentroid = d3.polygonCentroid(polyPoints);
@@ -296,6 +297,10 @@ export default function floorplan() {
             }
 
         });
+    };
+
+    map.clear = function () {
+        d3.selectAll('svg.map').remove();
     };
 
     map.drawZonePolygon = function (svgCanvas, zone) {
