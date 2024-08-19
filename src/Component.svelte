@@ -97,9 +97,11 @@
     function update(zones, floors, sensors) {
         if (!svg || svg.empty()) return;
 
-        d3.selectAll('svg.map>g').remove();
+        if (!g) {
+            g = svg.append("g");
+        }
 
-        g = svg.append("g");
+        d3.selectAll('svg.map>g>*').remove();
 
         map.imageLayers(g, floors);
         map.zonePolygons(g, zones, onSelectZone);

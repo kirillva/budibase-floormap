@@ -280,7 +280,7 @@ export default function floorplan() {
                 addLabel(zone.name, gPolyCentroid, "polygon-id-" + zone.id + '-text');
 
                 var bbox = parentNode._groups[0][0].getBBox();
-                // console.log(bbox);
+                console.log("alteredPoints", JSON.stringify(alteredPoints));
             }
 
             function addLabel(text, centroid, labelClassName) {
@@ -339,7 +339,11 @@ export default function floorplan() {
             .on("mousemove", drawline)
             .on("mouseup", decidePoly);
 
-        var dragBehavior = d3.drag().on("drag", alterPolygon);
+        var dragBehavior = d3.drag()
+            // .on("mousedown", ()=>console.log("start"))
+            .on("drag", alterPolygon)
+            // .on("mouseup", ()=>console.log("end"));
+
         // var dragPolygon = d3.drag().on("drag", movePolygon(bbox));
 
         //On mousedown - setting points for the polygon
