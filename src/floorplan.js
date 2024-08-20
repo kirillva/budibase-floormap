@@ -18,8 +18,52 @@ import * as d3 from "d3v4";
 import "./floorplan.css";
 import contextMenu from "./d3-context-menu.js";
 
+
+//Altering polygon coordinates based on handle drag
+function alterPolygon(zone, polyPoints) {
+    var alteredPoints = [];
+    var selectedP = d3.select(this);
+    var parentNode = d3.select(this.parentNode);
+
+    //select only the elements belonging to the parent <g> of the selected circle
+    var circles = d3.select(this.parentNode).selectAll('circle');
+    var polygon = d3.select(this.parentNode).select('polygon');
+
+
+    var pointCX = d3.event.x;
+    var pointCY = d3.event.y;
+
+    //rendering selected circle on drag
+    selectedP.attr("cx", pointCX).attr("cy", pointCY);
+
+    //loop through the group of circle handles attatched to the polygon and push to new array
+    for (var i = 0; i < polyPoints.length; i++) {
+
+        var circleCoord = d3.select(circles._groups[0][i]);
+        var pointCoord = [parseInt(circleCoord.attr("cx")), parseInt(circleCoord.attr("cy"))];
+        alteredPoints[i] = pointCoord;
+
+    }
+
+    //re-rendering polygon attributes to fit the handles
+    polygon.attr("points", alteredPoints);
+
+    // Update points
+    // zone.points = alteredPoints;
+
+    // Update label
+
+
+    // var bbox = parentNode._groups[0][0].getBBox();
+    // console.log("alteredPoints", JSON.stringify(alteredPoints));
+
+    return alteredPoints;
+}
+
+
 export default function floorplan() {
-    var layers = []
+    var layers = [];
+    var selectedZone = null;
         // panZoomEnabled = true,
         // maxZoom = 5,
         // toolsWidth = 95,
@@ -161,12 +205,15 @@ export default function floorplan() {
         ];
 
         function selectPolygon(zone) {
+            if (!zone) return;
+            
             d3.selectAll('.polygon').classed("selected", false);
             d3.select(`.zone-${zone.id}`).classed("selected", true);
 
             // // console.log('allPolygons', allPolygons);
+            selectedZone = zone;
             if (onSelectZone) {
-                onSelectZone(zone)
+                onSelectZone({item: zone})
             }
         }
 
@@ -189,7 +236,20 @@ export default function floorplan() {
                     .classed("polygon", true)
                     .classed("zone-" + zone.id, true);
                 // Add drag behavior
-                var dragBehavior = d3.drag().on("drag", alterPolygon);
+                var dragBehavior = d3.drag()
+                    .on("drag", function() {
+                        if (selectedZone === zone) {
+                            const alteredPoints = alterPolygon.bind(this)(zone, polyPoints)
+                            zone.points = alteredPoints;
+                            selectedZone = zone;
+                            d3.select(".polygon-id-" + zone.id + '-text').remove();
+                            var gPolyCentroid = d3.polygonCentroid(alteredPoints);
+                            addLabel(zone.name, gPolyCentroid, "polygon-id-" + zone.id + '-text');
+                        }
+                    })
+                    .on("end", (_, i, circleNode)=>{
+                        selectPolygon(selectedZone)
+                    });
 
                 // Not needed while drawing them all at first.
                 // polyPoints.splice(polyPoints.length - 1);
@@ -241,47 +301,49 @@ export default function floorplan() {
 
             }
 
-            //Altering polygon coordinates based on handle drag
-            function alterPolygon() {
+            // //Altering polygon coordinates based on handle drag
+            // function alterPolygon() {
 
-                var alteredPoints = [];
-                var selectedP = d3.select(this);
-                var parentNode = d3.select(this.parentNode);
+            //     var alteredPoints = [];
+            //     var selectedP = d3.select(this);
+            //     var parentNode = d3.select(this.parentNode);
 
-                //select only the elements belonging to the parent <g> of the selected circle
-                var circles = d3.select(this.parentNode).selectAll('circle');
-                var polygon = d3.select(this.parentNode).select('polygon');
+            //     //select only the elements belonging to the parent <g> of the selected circle
+            //     var circles = d3.select(this.parentNode).selectAll('circle');
+            //     var polygon = d3.select(this.parentNode).select('polygon');
 
 
-                var pointCX = d3.event.x;
-                var pointCY = d3.event.y;
+            //     var pointCX = d3.event.x;
+            //     var pointCY = d3.event.y;
 
-                //rendering selected circle on drag
-                selectedP.attr("cx", pointCX).attr("cy", pointCY);
+            //     //rendering selected circle on drag
+            //     selectedP.attr("cx", pointCX).attr("cy", pointCY);
 
-                //loop through the group of circle handles attatched to the polygon and push to new array
-                for (var i = 0; i < polyPoints.length; i++) {
+            //     //loop through the group of circle handles attatched to the polygon and push to new array
+            //     for (var i = 0; i < polyPoints.length; i++) {
 
-                    var circleCoord = d3.select(circles._groups[0][i]);
-                    var pointCoord = [parseInt(circleCoord.attr("cx")), parseInt(circleCoord.attr("cy"))];
-                    alteredPoints[i] = pointCoord;
+            //         var circleCoord = d3.select(circles._groups[0][i]);
+            //         var pointCoord = [parseInt(circleCoord.attr("cx")), parseInt(circleCoord.attr("cy"))];
+            //         alteredPoints[i] = pointCoord;
 
-                }
+            //     }
 
-                //re-rendering polygon attributes to fit the handles
-                polygon.attr("points", alteredPoints);
+            //     //re-rendering polygon attributes to fit the handles
+            //     polygon.attr("points", alteredPoints);
 
-                // Update points
-                zone.points = alteredPoints;
+            //     // Update points
+            //     zone.points = alteredPoints;
 
-                // Update label
-                d3.select(".polygon-id-" + zone.id + '-text').remove();
-                var gPolyCentroid = d3.polygonCentroid(alteredPoints);
-                addLabel(zone.name, gPolyCentroid, "polygon-id-" + zone.id + '-text');
+            //     // Update label
+            //     d3.select(".polygon-id-" + zone.id + '-text').remove();
+            //     var gPolyCentroid = d3.polygonCentroid(alteredPoints);
+            //     addLabel(zone.name, gPolyCentroid, "polygon-id-" + zone.id + '-text');
 
-                var bbox = parentNode._groups[0][0].getBBox();
-                console.log("alteredPoints", JSON.stringify(alteredPoints));
-            }
+            //     var bbox = parentNode._groups[0][0].getBBox();
+            //     console.log("alteredPoints", JSON.stringify(alteredPoints));
+
+            //     return bbox;
+            // }
 
             function addLabel(text, centroid, labelClassName) {
                 var svgText = gPoly.append("text");
@@ -340,9 +402,9 @@ export default function floorplan() {
             .on("mouseup", decidePoly);
 
         var dragBehavior = d3.drag()
-            // .on("mousedown", ()=>console.log("start"))
-            .on("drag", alterPolygon)
-            // .on("mouseup", ()=>console.log("end"));
+            // .on("start", () => console.log("start"))
+            // .on("drag", alterPolygon)
+            // .on("end", () => console.log("end"));
 
         // var dragPolygon = d3.drag().on("drag", movePolygon(bbox));
 
@@ -490,48 +552,52 @@ export default function floorplan() {
         }
 
         //Altering polygon coordinates based on handle drag
-        function alterPolygon() {
+        // function alterPolygon() {
+        //     if (isDrawing === true) return;
+            
+        //     var alteredPoints = [];
+        //     var selectedP = d3.select(this);
+        //     var parentNode = d3.select(this.parentNode);
+        //     if (!selectedZone) {
+        //         console.log('selectedP', selectedP);
+        //     }
 
-            if (isDrawing === true) return;
-
-            var alteredPoints = [];
-            var selectedP = d3.select(this);
-            var parentNode = d3.select(this.parentNode);
-
-            //select only the elements belonging to the parent <g> of the selected circle
-            var circles = d3.select(this.parentNode).selectAll('circle');
-            var polygon = d3.select(this.parentNode).select('polygon');
+        //     //select only the elements belonging to the parent <g> of the selected circle
+        //     var circles = d3.select(this.parentNode).selectAll('circle');
+        //     var polygon = d3.select(this.parentNode).select('polygon');
 
 
-            var pointCX = d3.event.x;
-            var pointCY = d3.event.y;
+        //     var pointCX = d3.event.x;
+        //     var pointCY = d3.event.y;
 
-            //rendering selected circle on drag
-            selectedP.attr("cx", pointCX).attr("cy", pointCY);
+        //     //rendering selected circle on drag
+        //     selectedP.attr("cx", pointCX).attr("cy", pointCY);
 
-            //loop through the group of circle handles attatched to the polygon and push to new array
-            for (var i = 0; i < polyPoints.length; i++) {
+        //     //loop through the group of circle handles attatched to the polygon and push to new array
+        //     for (var i = 0; i < polyPoints.length; i++) {
 
-                var circleCoord = d3.select(circles._groups[0][i]);
-                var pointCoord = [parseInt(circleCoord.attr("cx")), parseInt(circleCoord.attr("cy"))];
-                alteredPoints[i] = pointCoord;
+        //         var circleCoord = d3.select(circles._groups[0][i]);
+        //         var pointCoord = [parseInt(circleCoord.attr("cx")), parseInt(circleCoord.attr("cy"))];
+        //         alteredPoints[i] = pointCoord;
 
-            }
+        //     }
 
-            //re-rendering polygon attributes to fit the handles
-            polygon.attr("points", alteredPoints);
+        //     //re-rendering polygon attributes to fit the handles
+        //     polygon.attr("points", alteredPoints);
 
-            // Update points
-            zone.points = alteredPoints;
+        //     // Update points
+        //     zone.points = alteredPoints;
 
-            // Update label
-            d3.select(".zone-" + zone.id + '-text').remove();
-            var gPolyCentroid = d3.polygonCentroid(alteredPoints);
-            addLabel(gPoly, zone.name, gPolyCentroid);
+        //     // Update label
+        //     d3.select(".zone-" + zone.id + '-text').remove();
+        //     var gPolyCentroid = d3.polygonCentroid(alteredPoints);
+        //     addLabel(gPoly, zone.name, gPolyCentroid);
 
-            var bbox = parentNode._groups[0][0].getBBox();
-            // console.log(bbox);
-        }
+        //     var bbox = parentNode._groups[0][0].getBBox();
+
+        //     return bbox
+        //     // console.log(bbox);
+        // }
 
         function movePolygon() {
 

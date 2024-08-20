@@ -45,9 +45,9 @@
                         "label": "Select zone",
                         "context": [
                             {
-                                "label": "id",
-                                "type": "text",
-                                "key": "id"
+                                "label": "item",
+                                "type": "json",
+                                "key": "item"
                             }
                         ]
                     }
