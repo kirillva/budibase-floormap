@@ -20,62 +20,13 @@ import contextMenu from "./d3-context-menu.js";
 
 
 //Altering polygon coordinates based on handle drag
-function alterPolygon(point, polyPoints) {
-    var alteredPoints = [];
-    var parentNode = d3.select(this.parentNode);
-
-    //select only the elements belonging to the parent <g> of the selected circle
-    var circles = d3.select(this.parentNode).selectAll('circle');
-    var polygon = d3.select(this.parentNode).select('polygon');
-
-
-    var pointCX = d3.event.x;
-    var pointCY = d3.event.y;
-
-    point.attr("cx", pointCX).attr("cy", pointCY);
-
-    for (var i = 0; i < polyPoints.length; i++) {
-
-        var circleCoord = d3.select(circles._groups[0][i]);
-        var pointCoord = [parseInt(circleCoord.attr("cx")), parseInt(circleCoord.attr("cy"))];
-        alteredPoints[i] = pointCoord;
-
-    }
-
-    polygon.attr("points", alteredPoints);
-
-    return alteredPoints;
-}
-
-function movePolygon(polyPoints) {
-    var alteredPoints = [];
-
-    //select only the elements belonging to the parent <g> of the selected circle
-    var circles = d3.select(this).selectAll('circle');
-    var polygon = d3.select(this).select('polygon');
-
-
-    var pointdX = d3.event.x;
-    var pointdY = d3.event.y;
-
-    for (var i = 0; i < polyPoints.length; i++) {
-
-        var circleCoord = d3.select(circles._groups[0][i]);
-        var pointCoord = [parseInt(circleCoord.attr("cx")) + pointdX, parseInt(circleCoord.attr("cy")) + pointdY];
-        circleCoord.attr("cx", pointCoord[0]).attr("cy", pointCoord[1]);
-        alteredPoints[i] = pointCoord;
-
-    }
-
-    polygon.attr("points", alteredPoints);
-
-    return alteredPoints;
-}
 
 
 export default function floorplan() {
     var layers = [];
     var selectedZone = null;
+    var zones = [];
+    var onSelectZone = () => null;
         // panZoomEnabled = true,
         // maxZoom = 5,
         // toolsWidth = 95,
@@ -88,7 +39,169 @@ export default function floorplan() {
         return this
     }
 
+    function selectPolygon(zone) {
+        if (!zone) return;
+        
+        d3.selectAll('.polygon').classed("selected", false);
+        d3.select(`.zone-${zone.id}`).classed("selected", true);
 
+        // // console.log('allPolygons', allPolygons);
+        selectedZone = zone;
+        if (onSelectZone) {
+            onSelectZone({item: zone})
+        }
+    }
+
+    function alterPolygon(point, polyPoints) {
+        var alteredPoints = [];
+        var parentNode = d3.select(this.parentNode);
+    
+        //select only the elements belonging to the parent <g> of the selected circle
+        var circles = d3.select(this.parentNode).selectAll('circle');
+        var polygon = d3.select(this.parentNode).select('polygon');
+    
+    
+        var pointCX = d3.event.x;
+        var pointCY = d3.event.y;
+    
+        point.attr("cx", pointCX).attr("cy", pointCY);
+    
+        for (var i = 0; i < polyPoints.length; i++) {
+    
+            var circleCoord = d3.select(circles._groups[0][i]);
+            var pointCoord = [parseInt(circleCoord.attr("cx")), parseInt(circleCoord.attr("cy"))];
+            alteredPoints[i] = pointCoord;
+    
+        }
+    
+        polygon.attr("points", alteredPoints);
+    
+        return alteredPoints;
+    }
+    
+    function movePolygon(polyPoints) {
+        var alteredPoints = [];
+    
+        //select only the elements belonging to the parent <g> of the selected circle
+        var circles = d3.select(this).selectAll('circle');
+        var polygon = d3.select(this).select('polygon');
+    
+    
+        var pointdX = d3.event.x;
+        var pointdY = d3.event.y;
+    
+        for (var i = 0; i < polyPoints.length; i++) {
+    
+            var circleCoord = d3.select(circles._groups[0][i]);
+            var pointCoord = [parseInt(circleCoord.attr("cx")) + pointdX, parseInt(circleCoord.attr("cy")) + pointdY];
+            circleCoord.attr("cx", pointCoord[0]).attr("cy", pointCoord[1]);
+            alteredPoints[i] = pointCoord;
+    
+        }
+    
+        polygon.attr("points", alteredPoints);
+    
+        return alteredPoints;
+    }
+    
+    //Called on mousedown if mousedown point if a polygon handle
+    function drawPolygon(svgCanvas, zone, gPoly) {
+        var polyPoints = zone.points;
+        d3.select('g.outline').remove();
+    
+        // Create polygon
+        gPoly = svgCanvas.append('g')
+            .classed("polygon", true)
+            .classed("zone-" + zone.id, true);
+        // Add drag behavior
+        var dragBehavior = d3.drag()
+            .on("drag", function () {
+                if (selectedZone === zone) {
+                    const alteredPoints = alterPolygon.bind(this)(d3.select(this), zone.points)
+                    zone.points = alteredPoints;
+                    selectedZone = zone;
+                    d3.select(".polygon-id-" + zone.id + '-text').remove();
+                    var gPolyCentroid = d3.polygonCentroid(alteredPoints);
+                    addLabel(zone.name, gPolyCentroid, "polygon-id-" + zone.id + '-text', gPoly);
+                }
+            })
+            .on("end", (_, i, circleNode)=>{
+                selectPolygon(selectedZone)
+            });
+    
+        // Not needed while drawing them all at first.
+        // polyPoints.splice(polyPoints.length - 1);
+        //console.log(polyPoints);
+    
+        var polyEl = gPoly.append("polygon")
+            .attr("points", polyPoints);
+    
+        for (var i = 0; i < polyPoints.length; i++) {
+            gPoly.append('circle')
+                .attr("cx", polyPoints[i][0])
+                .attr("cy", polyPoints[i][1])
+                .attr("r", 4)
+                .call(dragBehavior);
+        }
+    
+        var bbox = polyEl._groups[0][0].getBBox();
+        var bbox2 = gPoly._groups[0][0].getBBox();
+    
+        bbox.x = 0;
+        bbox.y = 0;
+        bbox.width = 50;
+        bbox.height = 50;
+    
+        // Set translate variable data;
+        gPoly.datum({
+            x: 0,
+            y: 0
+        });
+    
+        // Set translate elem attribute defaults
+        gPoly.attr("transform", function (d) {
+            return "translate(" + d.x + "," + d.y + ")"
+        });
+    
+        // Add Transform for mouse drag
+        gPoly.call(d3.drag().on("drag", function (d) {
+            d3.select(this).attr("transform", "translate(" + (d.x = d3.event.x) + "," + (d.y = d3.event.y) + ")")
+        }).on("end", function (d) {
+            if (selectedZone) {
+                d3.select(this).attr("transform", `translate(${d.x = 0},${d.y = 0})`)
+                const alteredPoints = movePolygon.bind(this)(zone.points);
+                zone.points = alteredPoints;
+                selectedZone = zone;
+                d3.select(".polygon-id-" + zone.id + '-text').remove();
+                var gPolyCentroid = d3.polygonCentroid(alteredPoints);
+                addLabel(zone.name, gPolyCentroid, "polygon-id-" + zone.id + '-text', gPoly);
+                selectPolygon(selectedZone);
+            }
+        }));
+    
+        // Add context menu
+        // gPoly.on('contextmenu', contextMenu(menu));
+        gPoly.on('click', () => selectPolygon(zone));
+    
+        // Add label text
+        var gPolyCentroid = d3.polygonCentroid(polyPoints);
+        
+        addLabel(zone.name, gPolyCentroid, "polygon-id-" + zone.id + '-text', gPoly);
+    
+    }
+    
+    function addLabel(text, centroid, labelClassName, gPoly) {
+        var svgText = gPoly.append("text");
+        svgText.attr("x", centroid[0])
+            .attr("y", centroid[1])
+            .attr('font-size', 14)
+            .attr('font-weight', 400)
+            .attr('font-family', 'sans-serif')
+            .attr('text-anchor', 'middle')
+            .style('fill', 'darkOrange')
+            .classed(labelClassName, true);
+        svgText.text(text);
+    }
 
     map.addLayer = function (layer, index) {
         // layer.xScale(xScale);
@@ -161,8 +274,9 @@ export default function floorplan() {
         text.exit().remove();
     };
 
-    map.zonePolygons = function (svgCanvas, zones, onSelectZone) {
-
+    map.zonePolygons = function (svgCanvas, _zones, _onSelectZone) {
+        zones = _zones;
+        onSelectZone = _onSelectZone;
         // Context menu
         var menu = [
             {
@@ -182,121 +296,13 @@ export default function floorplan() {
             }
         ];
 
-        function selectPolygon(zone) {
-            if (!zone) return;
-            
-            d3.selectAll('.polygon').classed("selected", false);
-            d3.select(`.zone-${zone.id}`).classed("selected", true);
-
-            // // console.log('allPolygons', allPolygons);
-            selectedZone = zone;
-            if (onSelectZone) {
-                onSelectZone({item: zone})
-            }
-        }
+        
 
         zones.forEach(function (zone) {
             var gPoly;
-            drawPolygon(svgCanvas, zone);
+            drawPolygon(svgCanvas, zone, gPoly);
 
-            //Called on mousedown if mousedown point if a polygon handle
-            function drawPolygon(svgCanvas, zone) {
-                var polyPoints = zone.points;
-                d3.select('g.outline').remove();
-
-                // Create polygon
-                gPoly = svgCanvas.append('g')
-                    .classed("polygon", true)
-                    .classed("zone-" + zone.id, true);
-                // Add drag behavior
-                var dragBehavior = d3.drag()
-                    .on("drag", function () {
-                        if (selectedZone === zone) {
-                            const alteredPoints = alterPolygon.bind(this)(d3.select(this), zone.points)
-                            zone.points = alteredPoints;
-                            selectedZone = zone;
-                            d3.select(".polygon-id-" + zone.id + '-text').remove();
-                            var gPolyCentroid = d3.polygonCentroid(alteredPoints);
-                            addLabel(zone.name, gPolyCentroid, "polygon-id-" + zone.id + '-text');
-                        }
-                    })
-                    .on("end", (_, i, circleNode)=>{
-                        selectPolygon(selectedZone)
-                    });
-
-                // Not needed while drawing them all at first.
-                // polyPoints.splice(polyPoints.length - 1);
-                //console.log(polyPoints);
-
-                var polyEl = gPoly.append("polygon")
-                    .attr("points", polyPoints);
-
-                for (var i = 0; i < polyPoints.length; i++) {
-                    gPoly.append('circle')
-                        .attr("cx", polyPoints[i][0])
-                        .attr("cy", polyPoints[i][1])
-                        .attr("r", 4)
-                        .call(dragBehavior);
-                }
-
-                var bbox = polyEl._groups[0][0].getBBox();
-                var bbox2 = gPoly._groups[0][0].getBBox();
-
-                bbox.x = 0;
-                bbox.y = 0;
-                bbox.width = 50;
-                bbox.height = 50;
-
-                // Set translate variable data;
-                gPoly.datum({
-                    x: 0,
-                    y: 0
-                });
-
-                // Set translate elem attribute defaults
-                gPoly.attr("transform", function (d) {
-                    return "translate(" + d.x + "," + d.y + ")"
-                });
-
-                // Add Transform for mouse drag
-                gPoly.call(d3.drag().on("drag", function (d) {
-                    d3.select(this).attr("transform", "translate(" + (d.x = d3.event.x) + "," + (d.y = d3.event.y) + ")")
-                }).on("end", function (d) {
-                    if (selectedZone) {
-                        d3.select(this).attr("transform", `translate(${d.x = 0},${d.y = 0})`)
-                        const alteredPoints = movePolygon.bind(this)(zone.points);
-                        zone.points = alteredPoints;
-                        selectedZone = zone;
-                        d3.select(".polygon-id-" + zone.id + '-text').remove();
-                        var gPolyCentroid = d3.polygonCentroid(alteredPoints);
-                        addLabel(zone.name, gPolyCentroid, "polygon-id-" + zone.id + '-text');
-                        selectPolygon(selectedZone);
-                    }
-                }));
-
-                // Add context menu
-                gPoly.on('contextmenu', contextMenu(menu));
-                gPoly.on('click', () => selectPolygon(zone));
-
-                // Add label text
-                var gPolyCentroid = d3.polygonCentroid(polyPoints);
-                
-                addLabel(zone.name, gPolyCentroid, "polygon-id-" + zone.id + '-text');
-
-            }
-
-            function addLabel(text, centroid, labelClassName) {
-                var svgText = gPoly.append("text");
-                svgText.attr("x", centroid[0])
-                    .attr("y", centroid[1])
-                    .attr('font-size', 14)
-                    .attr('font-weight', 400)
-                    .attr('font-family', 'sans-serif')
-                    .attr('text-anchor', 'middle')
-                    .style('fill', 'darkOrange')
-                    .classed(labelClassName, true);
-                svgText.text(text);
-            }
+            
 
         });
     };
@@ -421,61 +427,64 @@ export default function floorplan() {
         function completePolygon() {
             d3.select('g.outline').remove();
 
-            gPoly = svgCanvas.append('g')
-                .classed("polygon", true)
-                .classed("zone-" + zone.id, true);
 
-            polyPoints.splice(polyPoints.length - 1);
-            //console.log(polyPoints);
+            drawPolygon(svgCanvas, zone);
+            // gPoly = svgCanvas.append('g')
+            //     .classed("polygon", true)
+            //     .classed("zone-" + zone.id, true);
 
-            var polyEl = gPoly.append("polygon")
-                .attr("points", polyPoints);
+            // polyPoints.splice(polyPoints.length - 1);
+            // //console.log(polyPoints);
 
-            for (var i = 0; i < polyPoints.length; i++) {
-                gPoly.append('circle')
-                    .attr("cx", polyPoints[i][0])
-                    .attr("cy", polyPoints[i][1])
-                    .attr("r", 4)
-                    .call(dragBehavior);
-            }
+            // var polyEl = gPoly.append("polygon")
+            //     .attr("points", polyPoints);
 
-            isDrawing = false;
-            isDragging = true;
+            // for (var i = 0; i < polyPoints.length; i++) {
+            //     gPoly.append('circle')
+            //         .attr("cx", polyPoints[i][0])
+            //         .attr("cy", polyPoints[i][1])
+            //         .attr("r", 4)
+            //         .call(dragBehavior);
+            // }
 
-            bbox = polyEl._groups[0][0].getBBox();
-            var bbox2 = gPoly._groups[0][0].getBBox();
+            // isDrawing = false;
+            // isDragging = true;
 
-
-            bbox.x = 0;
-            bbox.y = 0;
-            bbox.width = 50;
-            bbox.height = 50;
+            // bbox = polyEl._groups[0][0].getBBox();
+            // var bbox2 = gPoly._groups[0][0].getBBox();
 
 
-            // Set translate variable defaults;
-            gPoly.datum({
-                x: 0,
-                y: 0
-            });
+            // bbox.x = 0;
+            // bbox.y = 0;
+            // bbox.width = 50;
+            // bbox.height = 50;
 
-            // Set translate elem attribute defaults
-            gPoly.attr("transform", function (d) {
-                return "translate(" + d.x + "," + d.y + ")"
-            });
 
-            // polyEL.attr("transform", "translate(" + 0 + "," + 0 + ")");
-            //
-            gPoly.call(d3.drag().on("drag", function (d) {
-                d3.select(this).attr("transform", "translate(" + (d.x = d3.event.x) + "," + (d.y = d3.event.y) + ")")
-            }));
+            // // Set translate variable defaults;
+            // gPoly.datum({
+            //     x: 0,
+            //     y: 0
+            // });
 
-            // Add context menu
-            gPoly.on('contextmenu', contextMenu(menu))
+            // // Set translate elem attribute defaults
+            // gPoly.attr("transform", function (d) {
+            //     return "translate(" + d.x + "," + d.y + ")"
+            // });
 
-            // Add label text
-            var gPolyCentroid = d3.polygonCentroid(polyPoints);
-            addLabel(gPoly, zone.name, gPolyCentroid);
+            // // polyEL.attr("transform", "translate(" + 0 + "," + 0 + ")");
+            // //
+            // gPoly.call(d3.drag().on("drag", function (d) {
+            //     d3.select(this).attr("transform", "translate(" + (d.x = d3.event.x) + "," + (d.y = d3.event.y) + ")")
+            // }));
 
+            // // Add context menu
+            // gPoly.on('contextmenu', contextMenu(menu))
+
+            // // Add label text
+            // var gPolyCentroid = d3.polygonCentroid(polyPoints);
+            // addLabel(gPoly, zone.name, gPolyCentroid);
+
+            zones.push(zone);
         }
 
         function addLabel(g, text, centroid) {
