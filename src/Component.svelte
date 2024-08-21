@@ -68,7 +68,8 @@
             h: 32,
         };
         sensors.push(sensor);
-        new map.sensorImageLayer(g, floors[0], sensor);
+        map.addSensor(g, sensor);
+        // new map.sensorImageLayer(g, floors[0], [sensor]);
     }
 
     function onCreateZone() {
@@ -82,11 +83,11 @@
         new map.drawZonePolygon(g, zone);
     }
 
-    function drawSensors({ map, g, floors, items }) {
-        items.forEach((item) => {
-            new map.sensorImageLayer(g, floors[0], item);
-        });
-    }
+    // function drawSensors({ map, g, floors, items }) {
+    //     new map.sensorImageLayer(g, floors[0], items);
+    //     // items.forEach((item) => {
+    //     // });
+    // }
 
     function zoomed() {
         g.attr("transform", d3.event.transform);
@@ -105,7 +106,9 @@
 
         map.imageLayers(g, floors);
         map.zonePolygons(g, zones, onSelectZone);
-        drawSensors({ map, g, floors, items: sensors });
+        map.sensorImageLayer(g, sensors, onSelectSensor);
+        // drawSensors({ map, g, floors, items: sensors });
+
     }
 
     $: {
