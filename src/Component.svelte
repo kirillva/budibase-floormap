@@ -136,63 +136,63 @@
         svg.call(zoom);
     });
 
-    function onSave() {
-        // zones
-        const zonesData = [];
-        zones.forEach((item) => {
-            var zone = d3.select(`.zone-${item.id}`);
-            var points = d3.select(zone.node()).selectAll("circle");
+    // function onSave() {
+    //     // zones
+    //     const zonesData = [];
+    //     zones.forEach((item) => {
+    //         var zone = d3.select(`.zone-${item.id}`);
+    //         var points = d3.select(zone.node()).selectAll("circle");
 
-            var position = zone.data()?.[0];
-            var pointsPosition = [];
+    //         var position = zone.data()?.[0];
+    //         var pointsPosition = [];
 
-            points._groups[0].forEach((item) => {
-                pointsPosition.push([
-                    parseInt(item.getAttribute("cx")) + position.x,
-                    parseInt(item.getAttribute("cy")) + position.y,
-                ]);
-            });
+    //         points._groups[0].forEach((item) => {
+    //             pointsPosition.push([
+    //                 parseInt(item.getAttribute("cx")) + position.x,
+    //                 parseInt(item.getAttribute("cy")) + position.y,
+    //             ]);
+    //         });
 
-            const obj = {
-                _id: item._id,
-                id: item.id,
-                name: item.name,
-                points: pointsPosition,
-            };
-            zonesData.push(obj);
-        });
-        if (onChangeZone) {
-            zonesData.forEach((item) => {
-                onChangeZone({
-                    item: item,
-                });
-            });
-        }
+    //         const obj = {
+    //             _id: item._id,
+    //             id: item.id,
+    //             name: item.name,
+    //             points: pointsPosition,
+    //         };
+    //         zonesData.push(obj);
+    //     });
+    //     if (onChangeZone) {
+    //         zonesData.forEach((item) => {
+    //             onChangeZone({
+    //                 item: item,
+    //             });
+    //         });
+    //     }
 
-        // sensors
-        const sensorsData = [];
-        sensors.forEach((item) => {
-            var sensor = d3.select(`.sensor-${item.id}`);
+    //     // sensors
+    //     const sensorsData = [];
+    //     sensors.forEach((item) => {
+    //         var sensor = d3.select(`.sensor-${item.id}`);
 
-            var position = sensor.data()?.[0];
+    //         var position = sensor.data()?.[0];
 
-            const obj = {
-                _id: item._id,
-                id: item.id,
-                name: item.name,
-                x: item.x + position.x,
-                y: item.y + position.y,
-            };
-            sensorsData.push(obj);
-        });
-        if (onChangeSensor) {
-            sensorsData.forEach((item) => {
-                onChangeSensor({
-                    item: item,
-                });
-            });
-        }
-    }
+    //         const obj = {
+    //             _id: item._id,
+    //             id: item.id,
+    //             name: item.name,
+    //             x: item.x + position.x,
+    //             y: item.y + position.y,
+    //         };
+    //         sensorsData.push(obj);
+    //     });
+    //     if (onChangeSensor) {
+    //         sensorsData.forEach((item) => {
+    //             onChangeSensor({
+    //                 item: item,
+    //             });
+    //         });
+    //     }
+    // }
 </script>
 
 <div use:styleable={$component.styles}>
@@ -205,10 +205,10 @@
             class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
             on:click={onCreateSensor}>Place sensor</button
         >
-        <button
+        <!-- <button
             class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
             on:click={onSave}>Save</button
-        >
+        > -->
     </div>
 
     <svg class="map" id="main" width="900" height="600"></svg>
