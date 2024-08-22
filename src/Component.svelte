@@ -13,14 +13,18 @@
     export let zoneProvider;
     export let sensorProvider;
 
-    export let onChangeZone;
+    // export let onChangeZone;
     export let onSelectZone;
 
-    export let onChangeSensor;
+    // export let onChangeSensor;
     export let onSelectSensor;
 
     let svg;
     let g;
+
+    $: current_floor = 1;
+    $: width = 0
+    $: height = 0
 
     const floors =
         floorProvider?.rows?.map((item) => ({
@@ -40,6 +44,7 @@
         zoneProvider?.rows?.map((item) => ({
             _id: item._id,
             id: `${item.id}`,
+            floor: item.floor,
             name: item.name,
             points: JSON.parse(item.points),
         })) ?? [];
@@ -48,6 +53,7 @@
         sensorProvider?.rows?.map((item) => ({
             _id: item._id,
             id: `${item.id}`,
+            floor: item.floor,
             name: item.name,
             image: BluetoothIcon,
             x: item.x,
@@ -57,7 +63,6 @@
         })) ?? [];
 
     function onCreateSensor() {
-        // console.log('onCreateSensor');
         var sensor = {
             id: uuid(),
             name: uuid(),
@@ -69,7 +74,6 @@
         };
         sensors.push(sensor);
         map.addSensor(g, sensor);
-        // new map.sensorImageLayer(g, floors[0], [sensor]);
     }
 
     function onCreateZone() {
@@ -80,7 +84,7 @@
             points: zonePolyPoints,
         };
         zones.push(zone);
-        new map.drawZonePolygon(g, zone);
+        map.drawZonePolygon(g, zone);
     }
 
     // function drawSensors({ map, g, floors, items }) {
@@ -95,31 +99,54 @@
 
     var map = floorplan();
 
-    function update(zones, floors, sensors) {
+    function update(zones, floors, sensors, floor_id) {
         if (!svg || svg.empty()) return;
 
         if (!g) {
             g = svg.append("g");
         }
 
-        d3.selectAll('svg.map>g>*').remove();
+        map.clear();
 
-        map.imageLayers(g, floors);
-        map.zonePolygons(g, zones, onSelectZone);
-        map.sensorImageLayer(g, sensors, onSelectSensor);
+        var floor = floors.filter(item=>item.id == floor_id);
+        const {w, h} = floor[0]?.image || {};
+        width = w;
+        height = h;
+
+        console.log('floor', floor);
+
+        map.imageLayers(g, floor);
+        map.zonePolygons(
+            g, 
+            zones.filter(item=>item.floor == floor_id), 
+            (item)=>onSelectZone({
+                ...item,
+                floor: current_floor
+            })
+        );
+        map.sensorImageLayer(
+            g, 
+            sensors.filter(item=>item.floor == floor_id), 
+            (item)=>onSelectSensor({
+                ...item,
+                floor: current_floor
+            })
+        );
         // drawSensors({ map, g, floors, items: sensors });
 
     }
 
     $: {
-        update(zones, floors, sensors);
+        update(zones, floors, sensors, current_floor);
     }
 
     onMount(async () => {
         svg = d3.select("#main");
-        
-        const width = +svg.attr("width");
-        const height = +svg.attr("height");
+        debugger;
+
+        console.log(floors);
+        width = +svg.attr("width");
+        height = +svg.attr("height");
 
         update(zones, floors, sensors);
 
@@ -208,13 +235,22 @@
             class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
             on:click={onCreateSensor}>Place sensor</button
         >
+        {#each floors as floor}
+            <button
+                class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
+                on:click={()=>current_floor = floor.id}
+            >
+                {floor.id}
+            </button>
+        {/each}
+
         <!-- <button
             class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
             on:click={onSave}>Save</button
         > -->
     </div>
 
-    <svg class="map" id="main" width="900" height="600"></svg>
+    <svg class="map" id="main" width={width} height={height}></svg>
 </div>
 
 

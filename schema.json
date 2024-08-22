@@ -29,18 +29,6 @@
                     },
                     {
                         "type": "event",
-                        "key": "onChangeZone",
-                        "label": "Change zone",
-                        "context": [
-                            {
-                                "label": "item",
-                                "type": "json",
-                                "key": "item"
-                            }
-                        ]
-                    },
-                    {
-                        "type": "event",
                         "key": "onSelectZone",
                         "label": "Select zone",
                         "context": [
@@ -61,18 +49,6 @@
                         "type": "dataProvider",
                         "key": "sensorProvider",
                         "label": "Sensors"
-                    },
-                    {
-                        "type": "event",
-                        "key": "onChangeSensor",
-                        "label": "Change sensor",
-                        "context": [
-                            {
-                                "label": "item",
-                                "type": "json",
-                                "key": "item"
-                            }
-                        ]
                     },
                     {
                         "type": "event",

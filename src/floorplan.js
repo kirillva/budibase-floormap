@@ -345,7 +345,7 @@ export default function floorplan() {
     };
 
     map.clear = function () {
-        d3.selectAll('svg.map').remove();
+        d3.selectAll('svg.map>g>*').remove();
     };
 
     map.drawZonePolygon = function (svgCanvas, zone) {
@@ -501,6 +501,8 @@ export default function floorplan() {
                     selectSensor(sensor);
                 }
             }));
+
+        sensors.push(sensor);
     };
 
     map.sensorImageLayer = function (svgCanvas, _sensors, _onSelectSensor) {
