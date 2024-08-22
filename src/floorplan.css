@@ -18,3 +18,11 @@ g.polygon.selected > polygon {
 g.polygon > circle:hover {
     stroke: var(--primaryColor)
 }
+
+.sensor.selected > svg > .background {
+    fill: #0060A9
+}
+
+.sensor > svg > .background {
+    fill: #6d6d6d
+}

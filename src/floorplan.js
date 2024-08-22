@@ -16,7 +16,6 @@
 
 import * as d3 from "d3v4";
 import "./floorplan.css";
-import contextMenu from "./d3-context-menu.js";
 
 
 //Altering polygon coordinates based on handle drag
@@ -43,26 +42,37 @@ export default function floorplan() {
     function map() {
         return this
     }
+
     function selectSensor(sensor) {
-        debugger;
-        if (!sensor) return;
+        _selectSensor(sensor);
+        _selectPolygon(null);
+    }
 
+    function selectPolygon(zone) {
+        _selectPolygon(zone);
+        _selectSensor(null);
+    }
+
+    function _selectSensor(sensor) {
         d3.selectAll('.sensor').classed("selected", false);
-        d3.select(`.sensor-${sensor.id}`).classed("selected", true);
-
-        // // console.log('allPolygons', allPolygons);
+        
+        if (sensor) {
+            d3.select(`.sensor-${sensor.id}`).classed("selected", true);
+        }
+        
         selectedSensor = sensor;
         if (onSelectSensor) {
             onSelectSensor({ item: sensor })
         }
     }
-    function selectPolygon(zone) {
-        if (!zone) return;
 
+    function _selectPolygon(zone) {
         d3.selectAll('.polygon').classed("selected", false);
-        d3.select(`.zone-${zone.id}`).classed("selected", true);
 
-        // // console.log('allPolygons', allPolygons);
+        if (zone) {
+            d3.select(`.zone-${zone.id}`).classed("selected", true);
+        }
+
         selectedZone = zone;
         if (onSelectZone) {
             onSelectZone({ item: zone })
@@ -95,6 +105,27 @@ export default function floorplan() {
 
         return alteredPoints;
     }
+    
+    function moveSensor() {
+        var sensor = d3.select(this).select('svg');
+        
+        var pointdX = d3.event.x;
+        var pointdY = d3.event.y;
+        
+        var oldX = Number(sensor.attr('x'));
+        var oldY = Number(sensor.attr('y'));
+
+        var newX = oldX + pointdX;
+        var newY = oldY + pointdY;
+
+        sensor.attr("x", newX).attr("y", newY);
+
+        return {
+            x: newX,
+            y: newY
+        };
+    }
+
 
     function movePolygon(polyPoints) {
         var alteredPoints = [];
@@ -181,22 +212,27 @@ export default function floorplan() {
         });
 
         // Add Transform for mouse drag
-        gPoly.call(d3.drag().on("drag", function (d) {
-            if (selectedZone === zone) {
-                d3.select(this).attr("transform", "translate(" + (d.x = d3.event.x) + "," + (d.y = d3.event.y) + ")")
-            }
-        }).on("end", function (d) {
-            if (selectedZone) {
-                d3.select(this).attr("transform", `translate(${d.x = 0},${d.y = 0})`)
-                const alteredPoints = movePolygon.bind(this)(zone.points);
-                zone.points = alteredPoints;
-                selectedZone = zone;
-                d3.select(".polygon-id-" + zone.id + '-text').remove();
-                var gPolyCentroid = d3.polygonCentroid(alteredPoints);
-                addLabel(zone.name, gPolyCentroid, "polygon-id-" + zone.id + '-text', gPoly);
-                selectPolygon(selectedZone);
-            }
-        }));
+        gPoly.on("click", function (d) {
+            selectPolygon(selectedZone);
+        });
+        gPoly.call(d3.drag()
+            .on("drag", function (d) {
+                if (selectedZone === zone) {
+                    d3.select(this).attr("transform", "translate(" + (d.x = d3.event.x) + "," + (d.y = d3.event.y) + ")")
+                }
+            })
+            .on("end", function (d) {
+                if (selectedZone === zone) {
+                    d3.select(this).attr("transform", `translate(${d.x = 0},${d.y = 0})`)
+                    const alteredPoints = movePolygon.bind(this)(zone.points);
+                    zone.points = alteredPoints;
+                    selectedZone = zone;
+                    d3.select(".polygon-id-" + zone.id + '-text').remove();
+                    var gPolyCentroid = d3.polygonCentroid(alteredPoints);
+                    addLabel(zone.name, gPolyCentroid, "polygon-id-" + zone.id + '-text', gPoly);
+                    selectPolygon(selectedZone);
+                }
+            }));
 
         // Add context menu
         // gPoly.on('contextmenu', contextMenu(menu));
@@ -445,6 +481,9 @@ export default function floorplan() {
             return "translate(" + d.x + "," + d.y + ")"
         });
 
+        d3.selectAll(".sensor-" + sensor.id).on("click", function (d) {
+            selectSensor(sensor);
+        });
         d3.selectAll(".sensor-" + sensor.id).call(d3.drag()
             .on("drag", function (d) {
                 if (selectedSensor === sensor) {
@@ -453,16 +492,14 @@ export default function floorplan() {
                 }
             })
             .on("end", function (d) {
-                d3.select(this).attr("transform", `translate(${d.x = 0},${d.y = 0})`);
-                
-                // const alteredPoints = movePolygon.bind(this)(zone.points);
-                // zone.points = alteredPoints;
-                // selectedZone = zone;
-                // d3.select(".polygon-id-" + zone.id + '-text').remove();
-                // var gPolyCentroid = d3.polygonCentroid(alteredPoints);
-                // addLabel(zone.name, gPolyCentroid, "polygon-id-" + zone.id + '-text', gPoly);
-                // selectPolygon(selectedZone);
-                selectSensor(sensor);
+                if (selectedSensor === sensor) {
+                    const newPos = moveSensor.bind(this)(sensor);
+                    sensor.x = newPos.x; //d3.event.x;
+                    sensor.y = newPos.y; //d3.event.y;
+                    d3.select(this).attr("transform", `translate(${d.x = 0},${d.y = 0})`);
+
+                    selectSensor(sensor);
+                }
             }));
     };
 

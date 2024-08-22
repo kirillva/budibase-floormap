@@ -73,6 +73,18 @@
                                 "key": "item"
                             }
                         ]
+                    },
+                    {
+                        "type": "event",
+                        "key": "onSelectSensor",
+                        "label": "Select sensor",
+                        "context": [
+                            {
+                                "label": "item",
+                                "type": "json",
+                                "key": "item"
+                            }
+                        ]
                     }
                 ]
             },
