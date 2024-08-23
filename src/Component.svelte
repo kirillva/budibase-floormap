@@ -26,6 +26,10 @@
     $: width = 0
     $: height = 0
 
+    function transformPositions () {
+        
+    }
+
     const floors =
         floorProvider?.rows?.map((item) => ({
             _id: item._id,
@@ -67,6 +71,7 @@
             id: uuid(),
             name: uuid(),
             image: BluetoothIcon,
+            floor: current_floor,
             x: 50,
             y: 50,
             w: 32,
