@@ -132,23 +132,6 @@
                 floor: current_floor
             })
         );
-        // drawSensors({ map, g, floors, items: sensors });
-
-    }
-
-    $: {
-        update(zones, floors, sensors, current_floor);
-    }
-
-    onMount(async () => {
-        svg = d3.select("#main");
-        debugger;
-
-        console.log(floors);
-        width = +svg.attr("width");
-        height = +svg.attr("height");
-
-        update(zones, floors, sensors);
 
         var zoom = d3
             .zoom()
@@ -164,6 +147,20 @@
             .on("zoom", zoomed);
 
         svg.call(zoom);
+        // drawSensors({ map, g, floors, items: sensors });
+
+    }
+
+    $: {
+        update(zones, floors, sensors, current_floor);
+    }
+
+    onMount(async () => {
+        svg = d3.select("#main");
+        width = +svg.attr("width");
+        height = +svg.attr("height");
+
+        update(zones, floors, sensors);
     });
 
     // function onSave() {
@@ -238,7 +235,11 @@
         {#each floors as floor}
             <button
                 class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
-                on:click={()=>current_floor = floor.id}
+                on:click={()=>{
+                    current_floor = floor.id
+                    onSelectZone(null);
+                    onSelectSensor(null);
+                }}
             >
                 {floor.id}
             </button>
