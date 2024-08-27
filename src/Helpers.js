@@ -12,6 +12,14 @@ export const uuid = function () {
     );
     return uuid;
 };
+
+// Получение позиции из нескольких координат
+// positions = [{
+//     x: 0,
+//     y: 0,
+//     z: 0,
+//     distance: 70,
+// }, ...]
 export const getPosition = function (
     positions,
     { 

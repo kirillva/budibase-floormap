@@ -1,14 +1,15 @@
-# Map
-This is a readme for your new Budibase plugin.
+# Плагин для рисования floormap
+Данный плагин для low-code платформы budibase позволяет рисовать с помощью библиотеки d3 план здания с геозонами, метками
 
-# Debugging
-import { terser } from "rollup-plugin-terser"
-comment // terser
+# Развитие
+Необходимо добавить отрисовку координат пользователей.
 
-# Description
-An amazing Budibase component!
+# Отладка
+Сборка происходит здесь: rollup.config.js
 
-Find out more about [Budibase](https://github.com/Budibase/budibase).
+Можно закомментировать сокращение текста, тогда debugger не будут затираться в map-1.0.0.tar.gz и будет срабатывать точка останова в коде плагина.
+// import { terser } from "rollup-plugin-terser"
+// terser
 
 ## Instructions
 
