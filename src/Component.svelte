@@ -2,7 +2,7 @@
     import * as d3 from "d3v4";
     import { getContext } from "svelte";
     import { onMount } from "svelte";
-    import { uuid } from "./Helpers";
+    import { getPosition, uuid } from "./Helpers";
     import floorplan from "./floorplan";
     import BluetoothIcon from "../lib/bluetooth.svg";
 
@@ -25,10 +25,6 @@
     $: current_floor = 1;
     $: width = 0
     $: height = 0
-
-    function transformPositions () {
-        
-    }
 
     const floors =
         floorProvider?.rows?.map((item) => ({
@@ -118,7 +114,7 @@
         width = w;
         height = h;
 
-        console.log('floor', floor);
+        // console.log('floor', floor);
 
         map.imageLayers(g, floor);
         map.zonePolygons(
@@ -152,8 +148,6 @@
             .on("zoom", zoomed);
 
         svg.call(zoom);
-        // drawSensors({ map, g, floors, items: sensors });
-
     }
 
     $: {
@@ -165,6 +159,96 @@
         width = +svg.attr("width");
         height = +svg.attr("height");
 
+        const pos = getPosition([
+            // {
+            //     x: 0,
+            //     y: 0,
+            //     z: 0,
+            //     distance: 0.5,
+            // },
+            {
+                x: 0,
+                y: 0,
+                z: 0,
+                distance: 0.866,
+            },
+            {
+                x: 1,
+                y: 1,
+                z: 1,
+                distance: 0.866,
+            },
+            {
+                x: 0,
+                y: 1,
+                z: 0,
+                distance: 0.866,
+            },
+            {
+                x: 1,
+                y: 0,
+                z: 1,
+                distance: 0.866,
+            },
+        ]);
+
+        // const pos = getPosition([
+        //     {
+        //         x: 0,
+        //         y: 0,
+        //         z: 0,
+        //         distance: 70,
+        //     },
+        //     {
+        //         x: 100,
+        //         y: 100,
+        //         z: 0,
+        //         distance: 70,
+        //     },
+        //     {
+        //         x: 0,
+        //         y: 100,
+        //         z: 0,
+        //         distance: 70,
+        //     },
+        //     {
+        //         x: 100,
+        //         y: 0,
+        //         z: 0,
+        //         distance: 0.70,
+        //     },
+        // ]);
+        
+
+        // const pos = getPosition([
+        //     {
+        //         x: 0,
+        //         y: 0,
+        //         z: 0,
+        //         distance: 0.30,
+        //     },
+        //     {
+        //         x: 1,
+        //         y: 1,
+        //         z: 0,
+        //         distance: 1.10,
+        //     },
+        //     {
+        //         x: 0,
+        //         y: 1,
+        //         z: 0,
+        //         distance: 0.80,
+        //     },
+        //     {
+        //         x: 1,
+        //         y: 0,
+        //         z: 0,
+        //         distance: 0.80,
+        //     },
+        // ]);
+
+
+        console.log('pos', pos);
         update(zones, floors, sensors);
     });
 
