@@ -25,6 +25,8 @@
     $: current_floor = 1;
     $: width = 0
     $: height = 0
+    $: polygonsVisible = true
+    $: sensorsVisible = true
 
     const floors =
         floorProvider?.rows?.map((item) => ({
@@ -61,6 +63,24 @@
             w: 32,
             h: 32,
         })) ?? [];
+
+    function togglePolygons(visible){
+        polygonsVisible = visible;
+        if (visible) {
+            d3.selectAll('.polygon').style('display', 'unset')
+        } else {
+            d3.selectAll('.polygon').style('display', 'none')
+        }
+    }
+
+    function toggleSensors(visible){
+        sensorsVisible = visible;
+        if (visible) {
+            d3.selectAll('.sensor').style('display', 'unset')
+        } else {
+            d3.selectAll('.sensor').style('display', 'none')
+        }
+    }
 
     function onCreateSensor() {
         var sensor = {
@@ -341,6 +361,18 @@
     </div>
 
     <svg class="map" id="main" width={width} height={height}></svg>
+
+    
+    <div class="controllers">
+        <button
+            class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
+            on:click={()=>togglePolygons(!polygonsVisible)}>Zones</button
+        >
+        <button
+            class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
+            on:click={()=>toggleSensors(!sensorsVisible)}>Sensors</button
+        >
+    </div>
 </div>
 
 
@@ -350,7 +382,12 @@
         position: absolute;
         gap: 4px;
     }
+    .controllers {
+        display: flex;
+        position: absolute;
+        gap: 4px;
+    }
     .map {
-        margin: 30px;
+        margin: 32px;
     }
 </style>
