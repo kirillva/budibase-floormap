@@ -12,7 +12,9 @@
     export let floorProvider;
     export let zoneProvider;
     export let sensorProvider;
-
+    export let positionsProvider;
+    export let evacuationProvider;
+    
     // export let onChangeZone;
     export let onSelectZone;
 
@@ -42,6 +44,8 @@
             },
         })) ?? [];
 
+    $: evac_routes = evacuationProvider?.rows ?? [];
+
     $: zones =
         zoneProvider?.rows?.map((item) => ({
             _id: item._id,
@@ -49,6 +53,7 @@
             floor: item.floor,
             name: item.name,
             points: JSON.parse(item.points),
+            color: item.color
         })) ?? [];
 
     $: sensors =
@@ -152,6 +157,11 @@
                 ...item,
                 floor: current_floor
             })
+        );
+
+        map.evacuationLayer(
+            g,
+            evac_routes
         );
 
         var zoom = d3
@@ -353,11 +363,6 @@
                 {floor.id}
             </button>
         {/each}
-
-        <!-- <button
-            class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
-            on:click={onSave}>Save</button
-        > -->
     </div>
 
     <svg class="map" id="main" width={width} height={height}></svg>
@@ -388,6 +393,6 @@
         gap: 4px;
     }
     .map {
-        margin: 32px;
+        margin: 32px 32px 0;
     }
 </style>

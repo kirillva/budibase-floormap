@@ -65,10 +65,14 @@
                 ]
             },
             {
-                "section": true,
-                "name": "Buttons",
-                "settings": [
-                ]
+                "type": "dataProvider",
+                "key": "positionsProvider",
+                "label": "Positions"
+            },
+            {
+                "type": "dataProvider",
+                "key": "evacuationProvider",
+                "label": "Evacuation routes"
             }
         ]
     }
