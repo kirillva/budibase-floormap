@@ -21,7 +21,7 @@ export const uuid = function () {
 //     distance: 70,
 // }, ...]
 export const getPosition = function (
-    positions,
+    positions = [],
     { 
 		// максимальное число итераций
 		max_iter,
@@ -33,6 +33,8 @@ export const getPosition = function (
 		fq
 	} = {}
 ) {
+    if (positions.length < 2) return null;
+
 	const all_pos = [];
 	positions.forEach(item=>{
 		all_pos.push(item.x);
@@ -44,7 +46,7 @@ export const getPosition = function (
 	max_iter = max_iter || 1000,
 	target_delta = target_delta || new_step, 
 	step = step || new_step,
-	fq = fq || 2
+	fq = fq || 1
 
     function fn(x, y, z, x0, y0, z0, dist) {
         return (
@@ -71,7 +73,7 @@ export const getPosition = function (
                 )
             );
         }
-        return delta_arr.map((item) => Math.abs(item));
+        return delta_arr
     }
 
 	function get_best_vector(positions, current) {
@@ -80,13 +82,13 @@ export const getPosition = function (
         for (let direction = 0; direction < vectors.length; direction++) {
             const vector = vectors[direction];
 
-            const new_current = current;
-            new_current.x = current.x + vector.x * step;
-            new_current.y = current.y + vector.y * step;
-            new_current.z = current.z + vector.z * step;
+            const new_current = {...current};
+            new_current.x = new_current.x + vector.x * step;
+            new_current.y = new_current.y + vector.y * step;
+            new_current.z = new_current.z + vector.z * step;
 
             const delta_arr = iter(positions, new_current);
-            const delta_mean = _.mean(delta_arr);
+            const delta_mean = _.sum(delta_arr);
             if (delta_mean < best_delta_mean) {
                 best_delta_mean = delta_mean;
                 best_direction = direction;
@@ -96,6 +98,7 @@ export const getPosition = function (
     }
 
     const vectors = [
+        { x: 0, y: 0, z: 0 },
         { x: 0, y: 0, z: -1 },
         { x: 0, y: -1, z: 0 },
         { x: 0, y: -1, z: -1 },
@@ -119,12 +122,12 @@ export const getPosition = function (
 		z: positions[0].z,
 	};
     let current_vector = get_best_vector(positions, current);
-    let min_delta_mean = 1000000;
 	let last_deltas = [];
 	let last_deltas_max_len = 100;
 	
     while (true) {
-        if (current_iter % fq) {
+        let min_delta_mean = 1000000;
+        if (current_iter % fq == 0) {
             current_vector = get_best_vector(positions, current);
         }
 
@@ -133,7 +136,7 @@ export const getPosition = function (
         current.z = current.z + current_vector.z * step;
 
         const delta_arr = iter(positions, current);
-        const delta_mean = _.mean(delta_arr);
+        const delta_mean = _.sum(delta_arr);
         if (delta_mean < min_delta_mean) {
             min_delta_mean = delta_mean;
         }
@@ -158,6 +161,5 @@ export const getPosition = function (
 		}
 		current_iter++;
     }
-	console.log('iterations:', current_iter)
     return current;
 };

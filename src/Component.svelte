@@ -14,7 +14,7 @@
     export let sensorProvider;
     export let positionsProvider;
     export let evacuationProvider;
-    
+
     // export let onChangeZone;
     export let onSelectZone;
 
@@ -25,10 +25,10 @@
     let g;
 
     $: current_floor = 1;
-    $: width = 0
-    $: height = 0
-    $: polygonsVisible = true
-    $: sensorsVisible = true
+    $: width = 0;
+    $: height = 0;
+    $: polygonsVisible = true;
+    $: sensorsVisible = true;
 
     const floors =
         floorProvider?.rows?.map((item) => ({
@@ -53,7 +53,7 @@
             floor: item.floor,
             name: item.name,
             points: JSON.parse(item.points),
-            color: item.color
+            color: item.color,
         })) ?? [];
 
     $: sensors =
@@ -69,21 +69,41 @@
             h: 32,
         })) ?? [];
 
-    function togglePolygons(visible){
+    $: ble_signals = positionsProvider?.rows ?? [];
+
+    $: {
+        const sensors_obj = {};
+        sensors.forEach(item => {
+            sensors_obj[item.id] = item;
+        });
+
+        ble_signals = ble_signals.map(item => {
+            const sensor = sensors_obj[item.sensor_id];
+            return { 
+                id: item.sensor_id,
+                x: sensor.x,
+                y: sensor.y,
+                z: sensor.floor * 500,
+                distance: item.distance
+            }
+        })
+    }
+
+    function togglePolygons(visible) {
         polygonsVisible = visible;
         if (visible) {
-            d3.selectAll('.polygon').style('display', 'unset')
+            d3.selectAll(".polygon").style("display", "unset");
         } else {
-            d3.selectAll('.polygon').style('display', 'none')
+            d3.selectAll(".polygon").style("display", "none");
         }
     }
 
-    function toggleSensors(visible){
+    function toggleSensors(visible) {
         sensorsVisible = visible;
         if (visible) {
-            d3.selectAll('.sensor').style('display', 'unset')
+            d3.selectAll(".sensor").style("display", "unset");
         } else {
-            d3.selectAll('.sensor').style('display', 'none')
+            d3.selectAll(".sensor").style("display", "none");
         }
     }
 
@@ -134,8 +154,8 @@
 
         map.clear();
 
-        var floor = floors.filter(item=>item.id == floor_id);
-        const {w, h} = floor[0]?.image || {};
+        var floor = floors.filter((item) => item.id == floor_id);
+        const { w, h } = floor[0]?.image || {};
         width = w;
         height = h;
 
@@ -143,26 +163,25 @@
 
         map.imageLayers(g, floor);
         map.zonePolygons(
-            g, 
-            zones.filter(item=>item.floor == floor_id), 
-            (item)=>onSelectZone({
-                ...item,
-                floor: current_floor
-            })
+            g,
+            zones.filter((item) => item.floor == floor_id),
+            (item) =>
+                onSelectZone({
+                    ...item,
+                    floor: current_floor,
+                }),
         );
         map.sensorImageLayer(
-            g, 
-            sensors.filter(item=>item.floor == floor_id), 
-            (item)=>onSelectSensor({
-                ...item,
-                floor: current_floor
-            })
+            g,
+            sensors.filter((item) => item.floor == floor_id),
+            (item) =>
+                onSelectSensor({
+                    ...item,
+                    floor: current_floor,
+                }),
         );
 
-        map.evacuationLayer(
-            g,
-            evac_routes
-        );
+        map.evacuationLayer(g, evac_routes);
 
         var zoom = d3
             .zoom()
@@ -178,49 +197,53 @@
             .on("zoom", zoomed);
 
         svg.call(zoom);
+
+        // console.log("ble_signals", ble_signals);
+
+        const pos = getPosition(ble_signals);
+        console.log("pos", pos);
+        // const pos = getPosition([
+        //     // {
+        //     //     x: 0,
+        //     //     y: 0,
+        //     //     z: 0,
+        //     //     distance: 0.5,
+        //     // },
+        //     {
+        //         x: 0,
+        //         y: 0,
+        //         z: 0,
+        //         distance: 0.866,
+        //     },
+        //     {
+        //         x: 1,
+        //         y: 1,
+        //         z: 1,
+        //         distance: 0.866,
+        //     },
+        //     {
+        //         x: 0,
+        //         y: 1,
+        //         z: 0,
+        //         distance: 0.866,
+        //     },
+        //     {
+        //         x: 1,
+        //         y: 0,
+        //         z: 1,
+        //         distance: 0.866,
+        //     },
+        // ]);
     }
 
     $: {
-        update(zones, floors, sensors, current_floor);
+        update(zones, floors, sensors, current_floor, ble_signals);
     }
 
     onMount(async () => {
         svg = d3.select("#main");
         width = +svg.attr("width");
         height = +svg.attr("height");
-
-        const pos = getPosition([
-            // {
-            //     x: 0,
-            //     y: 0,
-            //     z: 0,
-            //     distance: 0.5,
-            // },
-            {
-                x: 0,
-                y: 0,
-                z: 0,
-                distance: 0.866,
-            },
-            {
-                x: 1,
-                y: 1,
-                z: 1,
-                distance: 0.866,
-            },
-            {
-                x: 0,
-                y: 1,
-                z: 0,
-                distance: 0.866,
-            },
-            {
-                x: 1,
-                y: 0,
-                z: 1,
-                distance: 0.866,
-            },
-        ]);
 
         // const pos = getPosition([
         //     {
@@ -248,7 +271,6 @@
         //         distance: 0.70,
         //     },
         // ]);
-        
 
         // const pos = getPosition([
         //     {
@@ -277,9 +299,8 @@
         //     },
         // ]);
 
-
-        console.log('pos', pos);
-        update(zones, floors, sensors);
+        // console.log('pos', pos);
+        update(zones, floors, sensors, ble_signals);
     });
 
     // function onSave() {
@@ -354,8 +375,8 @@
         {#each floors as floor}
             <button
                 class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
-                on:click={()=>{
-                    current_floor = floor.id
+                on:click={() => {
+                    current_floor = floor.id;
                     onSelectZone(null);
                     onSelectSensor(null);
                 }}
@@ -364,22 +385,19 @@
             </button>
         {/each}
     </div>
+    <svg class="map" id="main" {width} {height}></svg>
 
-    <svg class="map" id="main" width={width} height={height}></svg>
-
-    
     <div class="controllers">
         <button
             class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
-            on:click={()=>togglePolygons(!polygonsVisible)}>Zones</button
+            on:click={() => togglePolygons(!polygonsVisible)}>Zones</button
         >
         <button
             class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
-            on:click={()=>toggleSensors(!sensorsVisible)}>Sensors</button
+            on:click={() => toggleSensors(!sensorsVisible)}>Sensors</button
         >
     </div>
 </div>
-
 
 <style>
     .buttons {

@@ -377,6 +377,8 @@ export default function floorplan() {
             const zoneFrom = zones.find((zone) => zone.id == route.to);
             const zoneTo = zones.find((zone) => zone.id == route.from);
 
+            if (!zoneFrom || !zoneTo) return;
+            
             var gPolyCentroidFrom = d3.polygonCentroid(zoneFrom.points);
             var gPolyCentroidTo = d3.polygonCentroid(zoneTo.points);
 
