@@ -351,10 +351,33 @@ export default function floorplan() {
         d3.selectAll("svg.map>g>*").remove();
     };
 
+    map.drawEvacuation = function (gContainer, zoneFrom, zoneTo) {
+        // const zoneFrom = zones.find((zone) => zone.id == route.to);
+        // const zoneTo = zones.find((zone) => zone.id == route.from);
+
+        if (!zoneFrom || !zoneTo) return;
+
+        var gPolyCentroidFrom = d3.polygonCentroid(zoneFrom.points);
+        var gPolyCentroidTo = d3.polygonCentroid(zoneTo.points);
+        
+        gContainer
+            .append("line")
+            .attr("x1", gPolyCentroidFrom[0])
+            .attr("y1", gPolyCentroidFrom[1])
+            .attr("x2", gPolyCentroidTo[0])
+            .attr("y2", gPolyCentroidTo[1])
+            // .attr("marker-start", "url(#arrow)")
+            // .attr("marker-mid", "url(#arrow)")
+            .attr("marker-end", "url(#arrow)")
+            .classed("evacuation", true);
+        
+        
+    };
+
     map.evacuationLayer = function (svgCanvas, items) {
         evac_routes = items;
 
-        var gContainer = svgCanvas.append("g").classed("outline", true);
+        var gContainer = svgCanvas.append("g").classed("evacuation_wrapper", true);
         svgCanvas
             .append("defs")
             .append("marker")
@@ -376,48 +399,24 @@ export default function floorplan() {
         evac_routes.forEach((route) => {
             const zoneFrom = zones.find((zone) => zone.id == route.to);
             const zoneTo = zones.find((zone) => zone.id == route.from);
+            map.drawEvacuation(gContainer, zoneFrom, zoneTo);
 
-            if (!zoneFrom || !zoneTo) return;
+            // if (!zoneFrom || !zoneTo) return;
+
+            // var gPolyCentroidFrom = d3.polygonCentroid(zoneFrom.points);
+            // var gPolyCentroidTo = d3.polygonCentroid(zoneTo.points);
             
-            var gPolyCentroidFrom = d3.polygonCentroid(zoneFrom.points);
-            var gPolyCentroidTo = d3.polygonCentroid(zoneTo.points);
-
-            // console.log("zoneFrom", zoneFrom, gPolyCentroidFrom);
-            // console.log("zoneTo", zoneTo, gPolyCentroidTo);
-
-            gContainer
-                .append("line")
-                .attr("x1", gPolyCentroidFrom[0])
-                .attr("y1", gPolyCentroidFrom[1])
-                .attr("x2", gPolyCentroidTo[0])
-                .attr("y2", gPolyCentroidTo[1])
-                // .attr("marker-start", "url(#arrow)")
-                // .attr("marker-mid", "url(#arrow)")
-                .attr("marker-end", "url(#arrow)")
-                .classed("evacuation", true);
-
-            // svg
-            //     .append('path')
-            //     .attr('d', d3.line()([[100, 60], [40, 90], [200, 80], [300, 150]]))
-            //     .attr('stroke', 'black')
-            //     .attr('marker-start', 'url(#arrow)')
-            //     .attr('fill', 'none');
+            // gContainer
+            //     .append("line")
+            //     .attr("x1", gPolyCentroidFrom[0])
+            //     .attr("y1", gPolyCentroidFrom[1])
+            //     .attr("x2", gPolyCentroidTo[0])
+            //     .attr("y2", gPolyCentroidTo[1])
+            //     // .attr("marker-start", "url(#arrow)")
+            //     // .attr("marker-mid", "url(#arrow)")
+            //     .attr("marker-end", "url(#arrow)")
+            //     .classed("evacuation", true);
         });
-
-        // console.log('evac_routes', evac_routes);
-        // debugger;
-        // gContainer.append("line")
-        //     .attr("x1", linePoint1.x)
-        //     .attr("y1", linePoint1.y)
-        //     .attr("x2", linePoint2[0] - 2) //arbitary value must be substracted due to circle cursor hover not working
-        //     .attr("y2", linePoint2[1] - 2); // arbitary values must be tested
-        // linePoint2 = d3.mouse(this);
-        // gContainer.select('line').remove();
-        // gContainer.append('line')
-        //     .attr("x1", linePoint1.x)
-        //     .attr("y1", linePoint1.y)
-        //     .attr("x2", linePoint2[0] - 2) //arbitary value must be substracted due to circle cursor hover not working
-        //     .attr("y2", linePoint2[1] - 2); // arbitary values must be tested
     };
 
     map.drawZonePolygon = function (svgCanvas, zone) {

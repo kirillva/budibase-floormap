@@ -29,6 +29,30 @@
     $: height = 0;
     $: polygonsVisible = true;
     $: sensorsVisible = true;
+    $: evacuationVisible = true;
+    $: evacuationDrawing = false;
+    $: evacuationFrom = null;
+
+    function _onSelectZone(item) {
+        if (evacuationDrawing) {
+            if (evacuationFrom) {
+                map.drawEvacuation(
+                    d3.select('.evacuation_wrapper'), 
+                    evacuationFrom.item, 
+                    item.item
+                );
+                evacuationFrom = null;
+                evacuationDrawing = false;
+            } else {
+                evacuationFrom = item;
+            }
+        }
+        onSelectZone(item);
+    }
+
+    function _onSelectSensor(item) {
+        onSelectSensor(item);
+    }
 
     const floors =
         floorProvider?.rows?.map((item) => ({
@@ -97,6 +121,15 @@
             d3.selectAll(".polygon").style("display", "none");
         }
     }
+    
+    function toggleEvacuation(visible) {
+        evacuationVisible = visible;
+        if (visible) {
+            d3.selectAll(".evacuation").style("display", "unset");
+        } else {
+            d3.selectAll(".evacuation").style("display", "none");
+        }
+    }
 
     function toggleSensors(visible) {
         sensorsVisible = visible;
@@ -133,6 +166,20 @@
         map.drawZonePolygon(g, zone);
     }
 
+    function onCreateEvacuation() {
+        evacuationFrom = null;
+        evacuationDrawing = true;
+        
+        // var zonePolyPoints = [];
+        // var zone = {
+        //     id: uuid(),
+        //     name: uuid(),
+        //     points: zonePolyPoints,
+        // };
+        // zones.push(zone);
+        // map.drawZonePolygon(g, zone);
+    }
+
     // function drawSensors({ map, g, floors, items }) {
     //     new map.sensorImageLayer(g, floors[0], items);
     //     // items.forEach((item) => {
@@ -166,7 +213,7 @@
             g,
             zones.filter((item) => item.floor == floor_id),
             (item) =>
-                onSelectZone({
+                _onSelectZone({
                     ...item,
                     floor: current_floor,
                 }),
@@ -175,7 +222,7 @@
             g,
             sensors.filter((item) => item.floor == floor_id),
             (item) =>
-                onSelectSensor({
+                _onSelectSensor({
                     ...item,
                     floor: current_floor,
                 }),
@@ -372,13 +419,17 @@
             class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
             on:click={onCreateSensor}>Place sensor</button
         >
+        <button
+            class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
+            on:click={onCreateEvacuation}>Create evacuation</button
+        >
         {#each floors as floor}
             <button
                 class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
                 on:click={() => {
                     current_floor = floor.id;
-                    onSelectZone(null);
-                    onSelectSensor(null);
+                    _onSelectZone(null);
+                    _onSelectSensor(null);
                 }}
             >
                 {floor.id}
@@ -396,6 +447,11 @@
             class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
             on:click={() => toggleSensors(!sensorsVisible)}>Sensors</button
         >
+        <button
+            class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
+            on:click={() => toggleEvacuation(!evacuationVisible)}>Evacuation</button
+        >
+        
     </div>
 </div>
 
