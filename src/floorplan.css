@@ -30,7 +30,7 @@ g.polygon > circle:hover {
 /* g.polygon, .sensor {
     cursor: pointer;
 } */
- .evacuation {
+.evacuation {
     stroke: #3c7d27;
     stroke-width: 3px;
- }
+}

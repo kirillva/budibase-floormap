@@ -1,8 +1,16 @@
 <script>
     import * as d3 from "d3v4";
+    import _ from "lodash";
     import { getContext } from "svelte";
     import { onMount } from "svelte";
-    import { getPosition, uuid } from "./Helpers";
+    import {
+        addLayer,
+        drawEvacRoutes,
+        drawImages,
+        drawPolygons,
+        getPosition,
+        uuid,
+    } from "./Helpers";
     import floorplan from "./floorplan";
     import BluetoothIcon from "../lib/bluetooth.svg";
 
@@ -33,13 +41,18 @@
     $: evacuationDrawing = false;
     $: evacuationFrom = null;
 
+    $: floorLayer = null;
+    $: sensorLayer = null;
+    $: zonesLayer = null;
+    $: evacLayer = null;
+
     function _onSelectZone(item) {
         if (evacuationDrawing) {
             if (evacuationFrom) {
                 map.drawEvacuation(
-                    d3.select('.evacuation_wrapper'), 
-                    evacuationFrom.item, 
-                    item.item
+                    d3.select(".evacuation_wrapper"),
+                    evacuationFrom.item,
+                    item.item,
                 );
                 evacuationFrom = null;
                 evacuationDrawing = false;
@@ -47,14 +60,18 @@
                 evacuationFrom = item;
             }
         }
-        onSelectZone(item);
+        if (onSelectZone) {
+            onSelectZone(item);
+        }
     }
 
     function _onSelectSensor(item) {
-        onSelectSensor(item);
+        if (onSelectSensor) {
+            onSelectSensor(item);
+        }
     }
 
-    const floors =
+    $: floors =
         floorProvider?.rows?.map((item) => ({
             _id: item._id,
             id: item.id,
@@ -68,7 +85,12 @@
             },
         })) ?? [];
 
-    $: evac_routes = evacuationProvider?.rows ?? [];
+    $: evac_routes = 
+        evacuationProvider?.rows?.map((item) => ({
+            id: item.id,
+            from: item.from,
+            to: item.to,
+        })) ?? [];
 
     $: zones =
         zoneProvider?.rows?.map((item) => ({
@@ -93,24 +115,29 @@
             h: 32,
         })) ?? [];
 
-    $: ble_signals = positionsProvider?.rows ?? [];
+    $: ble_signals = [];
+    // positionsProvider?.rows?.map((item) => ({
+    //     id: item.id,
+    //     sensor_id: item.sensor_id,
+    //     distance: item.distance,
+    // })) ?? [];
 
     $: {
         const sensors_obj = {};
-        sensors.forEach(item => {
+        sensors.forEach((item) => {
             sensors_obj[item.id] = item;
         });
 
-        ble_signals = ble_signals.map(item => {
+        ble_signals = ble_signals.map((item) => {
             const sensor = sensors_obj[item.sensor_id];
-            return { 
+            return {
                 id: item.sensor_id,
                 x: sensor.x,
                 y: sensor.y,
                 z: sensor.floor * 500,
-                distance: item.distance
-            }
-        })
+                distance: item.distance,
+            };
+        });
     }
 
     function togglePolygons(visible) {
@@ -121,7 +148,7 @@
             d3.selectAll(".polygon").style("display", "none");
         }
     }
-    
+
     function toggleEvacuation(visible) {
         evacuationVisible = visible;
         if (visible) {
@@ -169,7 +196,7 @@
     function onCreateEvacuation() {
         evacuationFrom = null;
         evacuationDrawing = true;
-        
+
         // var zonePolyPoints = [];
         // var zone = {
         //     id: uuid(),
@@ -192,47 +219,198 @@
 
     var map = floorplan();
 
-    function update(zones, floors, sensors, floor_id) {
-        if (!svg || svg.empty()) return;
+    // function update(zones, floors, sensors, floor_id) {
+    //     if (!svg || svg.empty()) return;
 
-        if (!g) {
-            g = svg.append("g");
+    //     if (!g) {
+    //         g = svg.append("g");
+    //     }
+
+    //     map.clear();
+
+    //     var floor = floors.filter((item) => item.id == floor_id);
+    //     const { w, h } = floor[0]?.image || {};
+    //     width = w;
+    //     height = h;
+
+    //     // console.log('floor', floor);
+
+    //     map.imageLayers(g, floor);
+    //     map.zonePolygons(
+    //         g,
+    //         zones.filter((item) => item.floor == floor_id),
+    //         (item) =>
+    //             _onSelectZone({
+    //                 ...item,
+    //                 floor: current_floor,
+    //             }),
+    //     );
+    //     map.sensorImageLayer(
+    //         g,
+    //         sensors.filter((item) => item.floor == floor_id),
+    //         (item) =>
+    //             _onSelectSensor({
+    //                 ...item,
+    //                 floor: current_floor,
+    //             }),
+    //     );
+
+    //     map.evacuationLayer(g, evac_routes);
+
+    //     var zoom = d3
+    //         .zoom()
+    //         .scaleExtent([1, Infinity])
+    //         .translateExtent([
+    //             [0, 0],
+    //             [width, height],
+    //         ])
+    //         .extent([
+    //             [0, 0],
+    //             [width, height],
+    //         ])
+    //         .on("zoom", zoomed);
+
+    //     svg.call(zoom);
+
+    //     // debugger;
+
+    //     // console.log("ble_signals", ble_signals);
+
+    //     // const pos = getPosition(ble_signals);
+    //     // var start = Date.now();
+    //     // var positions = [];
+    //     // for (var j = 0; j < 10000; j++) {
+    //     //     positions.push({
+    //     //         x: Math.random() * 1000,
+    //     //         y: Math.random() * 1000,
+    //     //         z: Math.random() * 1000,
+    //     //         distance: Math.random() * 500,
+    //     //     })
+    //     // }
+    //     // const pos = getPosition(positions);
+    //     // console.log(Date.now() - start, pos);
+
+    //     // console.log("pos", pos);
+    //     // const pos = getPosition([
+    //     //     {
+    //     //         x: 0,
+    //     //         y: 0,
+    //     //         z: 0,
+    //     //         distance: 0.866,
+    //     //     },
+    //     //     {
+    //     //         x: 1,
+    //     //         y: 1,
+    //     //         z: 1,
+    //     //         distance: 0.866,
+    //     //     },
+    //     //     {
+    //     //         x: 0,
+    //     //         y: 1,
+    //     //         z: 0,
+    //     //         distance: 0.866,
+    //     //     },
+    //     //     {
+    //     //         x: 1,
+    //     //         y: 0,
+    //     //         z: 1,
+    //     //         distance: 0.866,
+    //     //     },
+    //     // ]);
+    // }
+
+    $: {
+        if (floorLayer) {
+            // console.log('floors', floors)
+            const floorItems = drawImages(floorLayer, {
+                name: "floor-1",
+                items: floors.map((item) => ({
+                    id: item.id,
+                    url: item.image.url,
+                    x: item.image.x,
+                    y: item.image.y,
+                    w: item.image.w,
+                    h: item.image.h,
+                })),
+            });
+            floorItems.on("click", function () {
+                console.log("click");
+            });
+            floorItems.on("drag", function () {
+                console.log("drag");
+            });
+            const { w, h } = floors[0]?.image || {};
+            width = w;
+            height = h;
         }
 
-        map.clear();
+        if (sensorLayer) {
+            console.log("sensors", sensors);
+            const sensorItems = drawImages(sensorLayer, {
+                name: "sensors-1",
+                items: sensors.map((item) => ({
+                    id: item.id,
+                    image: item.image,
+                    x: item.x,
+                    y: item.y,
+                    w: item.w,
+                    h: item.h,
+                })),
+            });
+            sensorItems.on("click", function () {
+                console.log("click2");
+            });
+            sensorItems.on("drag", function () {
+                console.log("drag2");
+            });
+        }
 
-        var floor = floors.filter((item) => item.id == floor_id);
-        const { w, h } = floor[0]?.image || {};
-        width = w;
-        height = h;
+        if (zonesLayer) {
+            const { polygons: zonesItems, points: zonePointItems } =
+                drawPolygons(zonesLayer, {
+                    name: "zones-1",
+                    items: zones.map((item) => ({
+                        id: item.id,
+                        points: item.points,
+                    })),
+                });
+            zonesItems?.on("click", function () {
+                console.log("zonesItems");
+            });
+            zonePointItems?.on("click", function () {
+                console.log("zonePointItems");
+            });
+        }
 
-        // console.log('floor', floor);
+        if (evacLayer) {
+            // const items = _.groupBy(zones, item=>item.id);
+            const zonesObj = {};
+            zones.forEach(item=>{
+                zonesObj[item.id] = item;
+            });
 
-        map.imageLayers(g, floor);
-        map.zonePolygons(
-            g,
-            zones.filter((item) => item.floor == floor_id),
-            (item) =>
-                _onSelectZone({
-                    ...item,
-                    floor: current_floor,
-                }),
-        );
-        map.sensorImageLayer(
-            g,
-            sensors.filter((item) => item.floor == floor_id),
-            (item) =>
-                _onSelectSensor({
-                    ...item,
-                    floor: current_floor,
-                }),
-        );
+            // console.log(items);
+            
 
-        map.evacuationLayer(g, evac_routes);
+            drawEvacRoutes(evacLayer, { name: "evacuation-1", items: 
+                evac_routes.map((route) => {
+                    const from = zonesObj[route.from];
+                    const to = zonesObj[route.to];
+                    // console.log('zonesObj', zonesObj);
 
-        var zoom = d3
-            .zoom()
-            .scaleExtent([1, Infinity])
+                    // const zoneFrom = zones.find((zone) => zone.id == route.to);
+                    // const zoneTo = zones.find((zone) => zone.id == route.from);
+                    return {
+                        id: route.id,
+                        from: from,
+                        to: to
+                    }
+                })
+            });
+        }
+
+        
+        const zoom = d3.zoom().scaleExtent([1, Infinity])
             .translateExtent([
                 [0, 0],
                 [width, height],
@@ -243,48 +421,9 @@
             ])
             .on("zoom", zoomed);
 
-        svg.call(zoom);
-
-        // console.log("ble_signals", ble_signals);
-
-        const pos = getPosition(ble_signals);
-        console.log("pos", pos);
-        // const pos = getPosition([
-        //     // {
-        //     //     x: 0,
-        //     //     y: 0,
-        //     //     z: 0,
-        //     //     distance: 0.5,
-        //     // },
-        //     {
-        //         x: 0,
-        //         y: 0,
-        //         z: 0,
-        //         distance: 0.866,
-        //     },
-        //     {
-        //         x: 1,
-        //         y: 1,
-        //         z: 1,
-        //         distance: 0.866,
-        //     },
-        //     {
-        //         x: 0,
-        //         y: 1,
-        //         z: 0,
-        //         distance: 0.866,
-        //     },
-        //     {
-        //         x: 1,
-        //         y: 0,
-        //         z: 1,
-        //         distance: 0.866,
-        //     },
-        // ]);
-    }
-
-    $: {
-        update(zones, floors, sensors, current_floor, ble_signals);
+        if (svg) {
+            svg.call(zoom);
+        }
     }
 
     onMount(async () => {
@@ -292,62 +431,44 @@
         width = +svg.attr("width");
         height = +svg.attr("height");
 
-        // const pos = getPosition([
-        //     {
-        //         x: 0,
-        //         y: 0,
-        //         z: 0,
-        //         distance: 70,
-        //     },
-        //     {
-        //         x: 100,
-        //         y: 100,
-        //         z: 0,
-        //         distance: 70,
-        //     },
-        //     {
-        //         x: 0,
-        //         y: 100,
-        //         z: 0,
-        //         distance: 70,
-        //     },
-        //     {
-        //         x: 100,
-        //         y: 0,
-        //         z: 0,
-        //         distance: 0.70,
-        //     },
-        // ]);
+        g = svg.append("g");
 
-        // const pos = getPosition([
-        //     {
-        //         x: 0,
-        //         y: 0,
-        //         z: 0,
-        //         distance: 0.30,
-        //     },
-        //     {
-        //         x: 1,
-        //         y: 1,
-        //         z: 0,
-        //         distance: 1.10,
-        //     },
-        //     {
-        //         x: 0,
-        //         y: 1,
-        //         z: 0,
-        //         distance: 0.80,
-        //     },
-        //     {
-        //         x: 1,
-        //         y: 0,
-        //         z: 0,
-        //         distance: 0.80,
-        //     },
-        // ]);
+        if (!floorLayer) {
+            floorLayer = addLayer(g, { name: "floors", className: "floors" });
+        }
 
-        // console.log('pos', pos);
-        update(zones, floors, sensors, ble_signals);
+        if (!sensorLayer) {
+            sensorLayer = addLayer(g, {
+                name: "sensors",
+                className: "sensors",
+            });
+        }
+
+        if (!zonesLayer) {
+            zonesLayer = addLayer(g, { name: "zones", className: "zones" });
+        }
+
+        if (!evacLayer) {
+            evacLayer = addLayer(g, { name: "evacuation", className: "evacuation" });
+        }
+        // var zoom = d3
+        //         .zoom()
+        //         .scaleExtent([1, Infinity])
+        //         .translateExtent([
+        //             [0, 0],
+        //             [width, height],
+        //         ])
+        //         .extent([
+        //             [0, 0],
+        //             [width, height],
+        //         ])
+        //         .on("zoom", function () {
+        //             g.attr("transform", d3.event.transform);
+        //         });
+
+        //     if (svg) {
+        //         svg.call(zoom);
+        //     }
     });
 
     // function onSave() {
@@ -449,9 +570,9 @@
         >
         <button
             class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
-            on:click={() => toggleEvacuation(!evacuationVisible)}>Evacuation</button
+            on:click={() => toggleEvacuation(!evacuationVisible)}
+            >Evacuation</button
         >
-        
     </div>
 </div>
 
