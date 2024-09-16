@@ -227,33 +227,72 @@ export function drawImages(layer, { name, items = [] }) {
 export function drawPolygons(layer, { name, items }) {
     if (!items?.length) return {};
 
-    for (var i = 0; i < items.length; i++) {
-        if (layer.select(`polygon[id="${items[i].id}"]`).empty()) {
-            const points = items[i].points;
-            const g = layer.append("g").attr("class", "polygon");
-            g.append("polygon").attr("name", name).attr("id", items[i].id);
-            for (var j = 0; j < points.length; j++) {
-                g.append("circle").attr("name", name).attr("r", 4);
-                // .call(dragBehavior);
-            }
+    let linePoints = [];
+    items.forEach((item) => {
+        const lines = [];
+        const points = [...item.points, item.points[0]];
+        for (var i = 0; i < points.length - 1; i++) {
+            lines.push({
+                index: i,
+                polygon: item.id,
+                line: [points[i], points[i + 1]],
+            });
         }
-    }
-
-    const polygonItems = layer.selectAll(`[name="${name}"]`).data(items);
-    polygonItems.attr(
-        "points",
-        items.map((item) => item.points)
-    );
+        linePoints = linePoints.concat(lines);
+    });
 
     let allPoints = [];
     items.forEach((item) => {
         allPoints = allPoints.concat(
-            item.points.map((point) => ({
-                id: item.id,
+            item.points.map((point, id) => ({
+                id: id,
+                polygon: item.id,
                 point: point,
             }))
         );
     });
+
+    for (var i = 0; i < items.length; i++) {
+        const poly = layer.select(`g.polygon[id="${items[i].id}"]`);
+        const polyPoints = poly.selectAll('circle');
+        if (!poly.empty() && polyPoints.size() != items[i].points.length) {
+            poly.remove();
+        }
+        if (layer.select(`polygon[id="${items[i].id}"]`).empty()) {
+            const points = items[i].points;
+            const g = layer.append("g").attr("class", "polygon").attr("id", items[i].id);
+            g.append("polygon").attr("name", name).attr("id", items[i].id);
+
+            for (var j = 0; j < points.length; j++) {
+                // if (j % 2 == 0) {
+                g.append("line").attr("name", name);
+                // }
+                g.append("circle").attr("name", name).attr("r", 4);
+            }
+            // g.append("line").attr("name", name);
+        }
+    }
+
+    const polygonItems = layer.selectAll(`polygon[name="${name}"]`).data(items);
+    polygonItems.attr("points", function (data) {
+        return data.points.join(",");
+    });
+
+
+    const lineItems = layer.selectAll(`line[name=${name}]`).data(linePoints);
+    lineItems
+        .attr("x1", function (data) {
+            return data.line[0][0];
+        })
+        .attr("y1", function (data) {
+            return data.line[0][1];
+        })
+        .attr("x2", function (data) {
+            return data.line[1][0];
+        })
+        .attr("y2", function (data) {
+            return data.line[1][1];
+        });
 
     const pointItems = layer.selectAll(`circle[name=${name}]`).data(allPoints);
     pointItems
@@ -267,14 +306,15 @@ export function drawPolygons(layer, { name, items }) {
             return data.point[1];
         });
 
-    return { polygons: polygonItems, points: pointItems };
+    return { polygons: polygonItems, points: pointItems, line: lineItems };
 }
 
 export function drawEvacRoutes(layer, { name, items }) {
     if (!items?.length) return;
 
     if (layer.select(`marker[id="arrow"]`).empty()) {
-        layer.append("defs")
+        layer
+            .append("defs")
             .append("marker")
             .attr("id", "arrow")
             .attr("viewBox", [0, 0, 12, 12])
@@ -320,5 +360,5 @@ export function drawEvacRoutes(layer, { name, items }) {
             return data.to[1];
         })
         .attr("marker-start", "url(#arrow)")
-        .attr("marker-end", "url(#arrow)")
+        .attr("marker-end", "url(#arrow)");
 }

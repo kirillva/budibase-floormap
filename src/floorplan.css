@@ -1,13 +1,21 @@
 g.polygon > polygon {
     fill: var(--spectrum-global-color-gray-400);
-    stroke: #8f8f8f;
-    stroke-width: 2px;
+    /* stroke: #8f8f8f; */
+    /* stroke-width: 2px; */
     fill-opacity: 0.2;
 }
+
+g.polygon > line {
+    /* fill: var(--spectrum-global-color-gray-400); */
+    stroke: #8f8f8f;
+    stroke-width: 4px;
+    /* fill-opacity: 0.2; */
+}
+
 g.polygon > circle {
     cursor: pointer;
     stroke: #8f8f8f;
-    stroke-width: 2px;
+    stroke-width: 4px;
     fill-opacity: 0.2;
 }
 
@@ -15,7 +23,8 @@ g.polygon.selected > polygon {
     fill: var(--primaryColor);
 }
 
-g.polygon > circle:hover {
+g.polygon > circle:hover, g.polygon > line:hover {
+    cursor: pointer;
     stroke: var(--primaryColor)
 }
 

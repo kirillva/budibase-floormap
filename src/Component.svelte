@@ -85,7 +85,7 @@
             },
         })) ?? [];
 
-    $: evac_routes = 
+    $: evac_routes =
         evacuationProvider?.rows?.map((item) => ({
             id: item.id,
             from: item.from,
@@ -178,8 +178,8 @@
             w: 32,
             h: 32,
         };
-        sensors.push(sensor);
-        map.addSensor(g, sensor);
+        sensors = [...sensors, sensor];
+        // map.addSensor(g, sensor);
     }
 
     function onCreateZone() {
@@ -321,7 +321,6 @@
 
     $: {
         if (floorLayer) {
-            // console.log('floors', floors)
             const floorItems = drawImages(floorLayer, {
                 name: "floor-1",
                 items: floors.map((item) => ({
@@ -333,12 +332,7 @@
                     h: item.image.h,
                 })),
             });
-            floorItems.on("click", function () {
-                console.log("click");
-            });
-            floorItems.on("drag", function () {
-                console.log("drag");
-            });
+
             const { w, h } = floors[0]?.image || {};
             width = w;
             height = h;
@@ -357,16 +351,17 @@
                     h: item.h,
                 })),
             });
-            sensorItems.on("click", function () {
-                console.log("click2");
-            });
-            sensorItems.on("drag", function () {
-                console.log("drag2");
-            });
+            sensorItems?.call(
+                d3.drag().on("end", function (sender) {
+                    const index = sensors.findIndex(item=>item.id == sender.id);
+                    sensors[index] = {...sensors[index], x: d3.event.x, y: d3.event.y};
+                    sensors = [...sensors];
+                }),
+            );
         }
 
         if (zonesLayer) {
-            const { polygons: zonesItems, points: zonePointItems } =
+            const { polygons: zonesItems, points: zonePointItems, line: zoneLineItems } =
                 drawPolygons(zonesLayer, {
                     name: "zones-1",
                     items: zones.map((item) => ({
@@ -374,43 +369,64 @@
                         points: item.points,
                     })),
                 });
-            zonesItems?.on("click", function () {
-                console.log("zonesItems");
-            });
-            zonePointItems?.on("click", function () {
-                console.log("zonePointItems");
-            });
+
+            zoneLineItems?.on("click", function(sender){
+                const index = zones.findIndex(item=>item.id == sender.polygon);
+                const points = zones[index].points;
+                const item = [d3.event.offsetX, d3.event.offsetY];
+                zones[index].points = [
+                    ...points.slice(0, sender.index + 1), 
+                    item, 
+                    ...points.slice(sender.index + 1)
+                ]
+                zones = [...zones];
+            })
+            zonesItems?.call(
+                d3.drag().on("end", function (sender) {
+                    const index = zones.findIndex(item=>item.id == sender.id);
+                    const oldCenter = d3.polygonCentroid(zones[index].points);
+                    const diff = [d3.event.x- oldCenter[0], d3.event.y - oldCenter[1]]
+
+                    zones[index] = {
+                        ...zones[index], 
+                        points: zones[index].points.map(item=>([item[0] + diff[0], item[1] + diff[1]]))
+                    };
+                    zones = [...zones];
+                }),
+            );
+
+            zonePointItems?.call(
+                d3.drag().on("end", function (sender) {
+                    const index = zones.findIndex(item=>item.id == sender.polygon);
+                    zones[index].points[sender.id] = [d3.event.x, d3.event.y]
+                    zones = [...zones]
+                })
+            )
         }
 
         if (evacLayer) {
-            // const items = _.groupBy(zones, item=>item.id);
             const zonesObj = {};
-            zones.forEach(item=>{
+            zones.forEach((item) => {
                 zonesObj[item.id] = item;
             });
 
-            // console.log(items);
-            
-
-            drawEvacRoutes(evacLayer, { name: "evacuation-1", items: 
-                evac_routes.map((route) => {
+            drawEvacRoutes(evacLayer, {
+                name: "evacuation-1",
+                items: evac_routes.map((route) => {
                     const from = zonesObj[route.from];
                     const to = zonesObj[route.to];
-                    // console.log('zonesObj', zonesObj);
-
-                    // const zoneFrom = zones.find((zone) => zone.id == route.to);
-                    // const zoneTo = zones.find((zone) => zone.id == route.from);
                     return {
                         id: route.id,
                         from: from,
-                        to: to
-                    }
-                })
+                        to: to,
+                    };
+                }),
             });
         }
 
-        
-        const zoom = d3.zoom().scaleExtent([1, Infinity])
+        const zoom = d3
+            .zoom()
+            .scaleExtent([1, Infinity])
             .translateExtent([
                 [0, 0],
                 [width, height],
@@ -449,26 +465,11 @@
         }
 
         if (!evacLayer) {
-            evacLayer = addLayer(g, { name: "evacuation", className: "evacuation" });
+            evacLayer = addLayer(g, {
+                name: "evacuation",
+                className: "evacuation",
+            });
         }
-        // var zoom = d3
-        //         .zoom()
-        //         .scaleExtent([1, Infinity])
-        //         .translateExtent([
-        //             [0, 0],
-        //             [width, height],
-        //         ])
-        //         .extent([
-        //             [0, 0],
-        //             [width, height],
-        //         ])
-        //         .on("zoom", function () {
-        //             g.attr("transform", d3.event.transform);
-        //         });
-
-        //     if (svg) {
-        //         svg.call(zoom);
-        //     }
     });
 
     // function onSave() {
