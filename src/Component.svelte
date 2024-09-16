@@ -11,7 +11,7 @@
         getPosition,
         uuid,
     } from "./Helpers";
-    import floorplan from "./floorplan";
+    import "./floorplan.css";
     import BluetoothIcon from "../lib/bluetooth.svg";
 
     const { styleable, ...props } = getContext("sdk");
@@ -39,6 +39,7 @@
     $: sensorsVisible = true;
     $: evacuationVisible = true;
     $: evacuationDrawing = false;
+    $: zoneDrawing = false;
     $: evacuationFrom = null;
 
     $: floorLayer = null;
@@ -183,7 +184,8 @@
     }
 
     function onCreateZone() {
-        console.log(zones, sensors, evac_routes);
+        // console.log(zones, sensors, evac_routes);
+        zoneDrawing = true;
         // zones
         // var zonePolyPoints = [];
         // var zone = {
@@ -433,6 +435,15 @@
                     zones = [...zones];
                 }),
             );
+            zonePointItems?.on("click", function(sender){
+                const index = zones.findIndex(item=>item.id == sender.polygon);
+                debugger;
+                if (sender.id == 0) {
+                    zones[index].isCreating = false;
+                    zoneDrawing = false;
+                    zones = [...zones];
+                }
+            }, true);
 
             zonePointItems?.call(
                 d3.drag().on("end", function (sender) {
@@ -488,6 +499,39 @@
 
         g = svg.append("g");
 
+        g?.on("click", function(sender){
+            // debugger;
+            if (!zoneDrawing) return;
+            // sender.id
+            const creatingZoneIndex = zones.findIndex(item=>item.isCreating == true);
+            if (creatingZoneIndex < 0) {
+                const index = uuid();
+                zones = [...zones, {
+                    id: index,
+                    floor: current_floor,
+                    name: index,
+                    points: [[d3.event.offsetX, d3.event.offsetY]],
+                    isCreating: true,
+                    selected: false
+                }]
+            } else {
+                zones[creatingZoneIndex].points.push([d3.event.offsetX, d3.event.offsetY]);
+                zones = [...zones];
+            }
+            // console.log("zoneDrawing", creatingZone);
+            
+            // const index = zones.findIndex(item=>item.id == sender.polygon);
+            // const points = zones[index].points;
+            // const item = [d3.event.offsetX, d3.event.offsetY];
+            // zones[index].points = [
+            //     ...points.slice(0, sender.index + 1), 
+            //     item, 
+            //     ...points.slice(sender.index + 1)
+            // ]
+            // zones = [...zones];
+        });
+
+        
         if (!floorLayer) {
             floorLayer = addLayer(g, { name: "floors", className: "floors" });
         }
