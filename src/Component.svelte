@@ -46,30 +46,30 @@
     $: zonesLayer = null;
     $: evacLayer = null;
 
-    function _onSelectZone(item) {
-        if (evacuationDrawing) {
-            if (evacuationFrom) {
-                map.drawEvacuation(
-                    d3.select(".evacuation_wrapper"),
-                    evacuationFrom.item,
-                    item.item,
-                );
-                evacuationFrom = null;
-                evacuationDrawing = false;
-            } else {
-                evacuationFrom = item;
-            }
-        }
-        if (onSelectZone) {
-            onSelectZone(item);
-        }
-    }
+    // function _onSelectZone(item) {
+    //     if (evacuationDrawing) {
+    //         if (evacuationFrom) {
+    //             map.drawEvacuation(
+    //                 d3.select(".evacuation_wrapper"),
+    //                 evacuationFrom.item,
+    //                 item.item,
+    //             );
+    //             evacuationFrom = null;
+    //             evacuationDrawing = false;
+    //         } else {
+    //             evacuationFrom = item;
+    //         }
+    //     }
+    //     if (onSelectZone) {
+    //         onSelectZone(item);
+    //     }
+    // }
 
-    function _onSelectSensor(item) {
-        if (onSelectSensor) {
-            onSelectSensor(item);
-        }
-    }
+    // function _onSelectSensor(item) {
+    //     if (onSelectSensor) {
+    //         onSelectSensor(item);
+    //     }
+    // }
 
     $: floors =
         floorProvider?.rows?.map((item) => ({
@@ -143,9 +143,9 @@
     function togglePolygons(visible) {
         polygonsVisible = visible;
         if (visible) {
-            d3.selectAll(".polygon").style("display", "unset");
+            d3.selectAll(".zones").style("display", "unset");
         } else {
-            d3.selectAll(".polygon").style("display", "none");
+            d3.selectAll(".zones").style("display", "none");
         }
     }
 
@@ -161,9 +161,9 @@
     function toggleSensors(visible) {
         sensorsVisible = visible;
         if (visible) {
-            d3.selectAll(".sensor").style("display", "unset");
+            d3.selectAll(".sensors").style("display", "unset");
         } else {
-            d3.selectAll(".sensor").style("display", "none");
+            d3.selectAll(".sensors").style("display", "none");
         }
     }
 
@@ -183,19 +183,40 @@
     }
 
     function onCreateZone() {
-        var zonePolyPoints = [];
-        var zone = {
-            id: uuid(),
-            name: uuid(),
-            points: zonePolyPoints,
-        };
-        zones.push(zone);
-        map.drawZonePolygon(g, zone);
+        console.log(zones, sensors, evac_routes);
+        // zones
+        // var zonePolyPoints = [];
+        // var zone = {
+        //     id: uuid(),
+        //     name: uuid(),
+        //     points: zonePolyPoints,
+        // };
+        // zones.push(zone);
+        // map.drawZonePolygon(g, zone);
     }
 
     function onCreateEvacuation() {
-        evacuationFrom = null;
         evacuationDrawing = true;
+        // evacuationFrom = null;
+        // evacuationDrawing = true;
+
+        // var zonePolyPoints = [];
+        // var zone = {
+        //     id: uuid(),
+        //     name: uuid(),
+        //     points: zonePolyPoints,
+        // };
+        // zones.push(zone);
+        // map.drawZonePolygon(g, zone);
+    }
+    
+    function onClearEvacuation() {
+        const zoneIndex = zones.findIndex(item=>item.selected == true);
+        
+        evac_routes = evac_routes.filter(item => item.from != zones[zoneIndex].id && item.to != zones[zoneIndex].id)
+        evac_routes = [...evac_routes.map(item=>({...item }))];
+        // evacuationFrom = null;
+        // evacuationDrawing = true;
 
         // var zonePolyPoints = [];
         // var zone = {
@@ -207,17 +228,11 @@
         // map.drawZonePolygon(g, zone);
     }
 
-    // function drawSensors({ map, g, floors, items }) {
-    //     new map.sensorImageLayer(g, floors[0], items);
-    //     // items.forEach((item) => {
-    //     // });
-    // }
-
     function zoomed() {
         g.attr("transform", d3.event.transform);
     }
 
-    var map = floorplan();
+    // var map = floorplan();
 
     // function update(zones, floors, sensors, floor_id) {
     //     if (!svg || svg.empty()) return;
@@ -320,6 +335,7 @@
     // }
 
     $: {
+        console.log('evac_routes', evac_routes)
         if (floorLayer) {
             const floorItems = drawImages(floorLayer, {
                 name: "floor-1",
@@ -333,13 +349,16 @@
                 })),
             });
 
+            floorItems?.on("click", function(sender){
+                zones = zones.map(item=>({...item, selected: false}));
+            });
+
             const { w, h } = floors[0]?.image || {};
             width = w;
             height = h;
         }
 
         if (sensorLayer) {
-            console.log("sensors", sensors);
             const sensorItems = drawImages(sensorLayer, {
                 name: "sensors-1",
                 items: sensors.map((item) => ({
@@ -366,6 +385,7 @@
                     name: "zones-1",
                     items: zones.map((item) => ({
                         id: item.id,
+                        selected: item.selected,
                         points: item.points,
                     })),
                 });
@@ -380,9 +400,28 @@
                     ...points.slice(sender.index + 1)
                 ]
                 zones = [...zones];
-            })
+            });
+            zonesItems?.on("click", function(sender){
+                const index = zones.findIndex(item=>item.id == sender.id);
+                const fromIndex = zones.findIndex(item=>item.selected == true);
+                if (evacuationDrawing && fromIndex >= 0) {
+                    const toIndex = index;
+                    evac_routes = [...evac_routes, {
+                        id: uuid(),
+                        from: zones[fromIndex].id,
+                        to: zones[toIndex].id,
+                    }];
+                    evacuationDrawing = false;
+                }
+
+                zones = zones.map(item=>({...item, selected: false}));
+                zones[index].selected = true;
+                zones = [...zones];
+            });
             zonesItems?.call(
                 d3.drag().on("end", function (sender) {
+                    if (!sender.selected) return;
+
                     const index = zones.findIndex(item=>item.id == sender.id);
                     const oldCenter = d3.polygonCentroid(zones[index].points);
                     const diff = [d3.event.x- oldCenter[0], d3.event.y - oldCenter[1]]
@@ -542,16 +581,22 @@
             on:click={onCreateSensor}>Place sensor</button
         >
         <button
+            disabled={evacuationDrawing}
             class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
             on:click={onCreateEvacuation}>Create evacuation</button
         >
+        <button
+            class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
+            on:click={onClearEvacuation}>Clear evacuation</button
+        >
+        
         {#each floors as floor}
             <button
                 class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
                 on:click={() => {
                     current_floor = floor.id;
-                    _onSelectZone(null);
-                    _onSelectSensor(null);
+                    // _onSelectZone(null);
+                    // _onSelectSensor(null);
                 }}
             >
                 {floor.id}

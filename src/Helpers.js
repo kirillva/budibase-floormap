@@ -254,13 +254,16 @@ export function drawPolygons(layer, { name, items }) {
 
     for (var i = 0; i < items.length; i++) {
         const poly = layer.select(`g.polygon[id="${items[i].id}"]`);
-        const polyPoints = poly.selectAll('circle');
+        const polyPoints = poly.selectAll("circle");
         if (!poly.empty() && polyPoints.size() != items[i].points.length) {
             poly.remove();
         }
         if (layer.select(`polygon[id="${items[i].id}"]`).empty()) {
             const points = items[i].points;
-            const g = layer.append("g").attr("class", "polygon").attr("id", items[i].id);
+            const g = layer
+                .append("g")
+                .attr("class", "polygon")
+                .attr("id", items[i].id);
             g.append("polygon").attr("name", name).attr("id", items[i].id);
 
             for (var j = 0; j < points.length; j++) {
@@ -274,10 +277,13 @@ export function drawPolygons(layer, { name, items }) {
     }
 
     const polygonItems = layer.selectAll(`polygon[name="${name}"]`).data(items);
-    polygonItems.attr("points", function (data) {
-        return data.points.join(",");
-    });
-
+    polygonItems
+        .attr("points", function (data) {
+            return data.points.join(",");
+        })
+        .classed("selected", function (data) {
+            return data.selected || false;
+        });
 
     const lineItems = layer.selectAll(`line[name=${name}]`).data(linePoints);
     lineItems
@@ -310,6 +316,8 @@ export function drawPolygons(layer, { name, items }) {
 }
 
 export function drawEvacRoutes(layer, { name, items }) {
+    layer.selectAll(`line[name="${name}"]`).remove();
+
     if (!items?.length) return;
 
     if (layer.select(`marker[id="arrow"]`).empty()) {
@@ -332,6 +340,7 @@ export function drawEvacRoutes(layer, { name, items }) {
     const arrows = [];
     for (var i = 0; i < items.length; i++) {
         arrows.push({
+            id: items[i].id,
             from: d3.polygonCentroid(items[i].from.points),
             to: d3.polygonCentroid(items[i].to.points),
         });

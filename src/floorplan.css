@@ -5,6 +5,11 @@ g.polygon > polygon {
     fill-opacity: 0.2;
 }
 
+
+g.polygon > polygon.selected {
+    fill: var(--primaryColor);
+}
+
 g.polygon > line {
     /* fill: var(--spectrum-global-color-gray-400); */
     stroke: #8f8f8f;
@@ -15,7 +20,7 @@ g.polygon > line {
 g.polygon > circle {
     cursor: pointer;
     stroke: #8f8f8f;
-    stroke-width: 4px;
+    stroke-width: 8px;
     fill-opacity: 0.2;
 }
 
