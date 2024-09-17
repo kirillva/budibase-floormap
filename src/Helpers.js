@@ -247,6 +247,7 @@ export function drawPolygons(layer, { name, items }) {
             item.points.map((point, id) => ({
                 id: id,
                 polygon: item.id,
+                creating: id == 0 ? item.creating : false,
                 point: point,
             }))
         );
@@ -304,6 +305,9 @@ export function drawPolygons(layer, { name, items }) {
     pointItems
         .attr("polygon", function (data) {
             return data.id;
+        })
+        .classed("creating", function (data) {
+            return data.creating || false;
         })
         .attr("cx", function (data) {
             return data.point[0];

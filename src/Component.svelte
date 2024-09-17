@@ -40,37 +40,12 @@
     $: evacuationVisible = true;
     $: evacuationDrawing = false;
     $: zoneDrawing = false;
-    $: evacuationFrom = null;
 
     $: floorLayer = null;
     $: sensorLayer = null;
     $: zonesLayer = null;
     $: evacLayer = null;
 
-    // function _onSelectZone(item) {
-    //     if (evacuationDrawing) {
-    //         if (evacuationFrom) {
-    //             map.drawEvacuation(
-    //                 d3.select(".evacuation_wrapper"),
-    //                 evacuationFrom.item,
-    //                 item.item,
-    //             );
-    //             evacuationFrom = null;
-    //             evacuationDrawing = false;
-    //         } else {
-    //             evacuationFrom = item;
-    //         }
-    //     }
-    //     if (onSelectZone) {
-    //         onSelectZone(item);
-    //     }
-    // }
-
-    // function _onSelectSensor(item) {
-    //     if (onSelectSensor) {
-    //         onSelectSensor(item);
-    //     }
-    // }
 
     $: floors =
         floorProvider?.rows?.map((item) => ({
@@ -100,6 +75,7 @@
             floor: item.floor,
             name: item.name,
             points: JSON.parse(item.points),
+            creating: false,
             color: item.color,
         })) ?? [];
 
@@ -214,7 +190,8 @@
     
     function onClearEvacuation() {
         const zoneIndex = zones.findIndex(item=>item.selected == true);
-        
+        if (zoneIndex < 0) return;
+
         evac_routes = evac_routes.filter(item => item.from != zones[zoneIndex].id && item.to != zones[zoneIndex].id)
         evac_routes = [...evac_routes.map(item=>({...item }))];
         // evacuationFrom = null;
@@ -337,7 +314,7 @@
     // }
 
     $: {
-        console.log('evac_routes', evac_routes)
+        // console.log('evac_routes', evac_routes)
         if (floorLayer) {
             const floorItems = drawImages(floorLayer, {
                 name: "floor-1",
@@ -388,6 +365,7 @@
                     items: zones.map((item) => ({
                         id: item.id,
                         selected: item.selected,
+                        creating: item.creating,
                         points: item.points,
                     })),
                 });
@@ -439,7 +417,7 @@
                 const index = zones.findIndex(item=>item.id == sender.polygon);
                 debugger;
                 if (sender.id == 0) {
-                    zones[index].isCreating = false;
+                    zones[index].creating = false;
                     zoneDrawing = false;
                     zones = [...zones];
                 }
@@ -503,7 +481,7 @@
             // debugger;
             if (!zoneDrawing) return;
             // sender.id
-            const creatingZoneIndex = zones.findIndex(item=>item.isCreating == true);
+            const creatingZoneIndex = zones.findIndex(item=>item.creating == true);
             if (creatingZoneIndex < 0) {
                 const index = uuid();
                 zones = [...zones, {
@@ -511,7 +489,7 @@
                     floor: current_floor,
                     name: index,
                     points: [[d3.event.offsetX, d3.event.offsetY]],
-                    isCreating: true,
+                    creating: true,
                     selected: false
                 }]
             } else {
@@ -617,6 +595,7 @@
 <div use:styleable={$component.styles}>
     <div class="buttons">
         <button
+            disabled={zoneDrawing}
             class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
             on:click={onCreateZone}>Create Zone</button
         >
