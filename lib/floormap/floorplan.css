@@ -1,10 +1,12 @@
-g.polygon > polygon {
-    fill: var(--spectrum-global-color-gray-400);
-    /* stroke: #8f8f8f; */
-    /* stroke-width: 2px; */
-    fill-opacity: 0.2;
+:root {
+    --spectrum-global-color-gray-400: #d3d3d3;
+    --primaryColor: #1473e6;
 }
 
+g.polygon > polygon {
+    fill: var(--spectrum-global-color-gray-400);
+    fill-opacity: 0.2;
+}
 
 g.polygon > polygon.selected {
     fill: var(--primaryColor);
@@ -43,9 +45,6 @@ g.polygon > circle:hover, g.polygon > line:hover {
     fill: #6d6d6d
 }
 
-/* g.polygon, .sensor {
-    cursor: pointer;
-} */
 .evacuation {
     stroke: #3c7d27;
     stroke-width: 3px;
