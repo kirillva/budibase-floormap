@@ -26,18 +26,6 @@
                         "type": "dataProvider",
                         "key": "zoneProvider",
                         "label": "Zones"
-                    },
-                    {
-                        "type": "event",
-                        "key": "onSelectZone",
-                        "label": "Select zone",
-                        "context": [
-                            {
-                                "label": "item",
-                                "type": "json",
-                                "key": "item"
-                            }
-                        ]
                     }
                 ]
             },
@@ -49,18 +37,6 @@
                         "type": "dataProvider",
                         "key": "sensorProvider",
                         "label": "Sensors"
-                    },
-                    {
-                        "type": "event",
-                        "key": "onSelectSensor",
-                        "label": "Select sensor",
-                        "context": [
-                            {
-                                "label": "item",
-                                "type": "json",
-                                "key": "item"
-                            }
-                        ]
                     }
                 ]
             },
@@ -73,6 +49,30 @@
                 "type": "dataProvider",
                 "key": "evacuationProvider",
                 "label": "Evacuation routes"
+            },
+            {
+                "type": "event",
+                "key": "onSelect",
+                "label": "Select any",
+                "context": [
+                    {
+                        "label": "item",
+                        "type": "json",
+                        "key": "item"
+                    }
+                ]
+            },
+            {
+                "type": "event",
+                "key": "onSave",
+                "label": "Save row",
+                "context": [
+                    {
+                        "label": "item",
+                        "type": "json",
+                        "key": "item"
+                    }
+                ]
             }
         ]
     }

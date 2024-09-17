@@ -185,8 +185,7 @@ export function drawImages(layer, { name, items = [] }) {
                     .append("image")
                     .attr("name", name)
                     .attr("id", imageItem.id);
-            }
-            if (imageItem.image) {
+            } else if (imageItem.image) {
                 var image = new DOMParser().parseFromString(
                     imageItem.image,
                     "text/html"
@@ -198,6 +197,12 @@ export function drawImages(layer, { name, items = [] }) {
                 image.setAttribute("width", imageItem.w);
                 image.setAttribute("height", imageItem.h);
                 layer.node().appendChild(image);
+            } else {
+                layer
+                    .append("circle")
+                    .attr("name", name)
+                    .attr("id", imageItem.id)
+                    .attr("r", (imageItem.w || imageItem.h) / 2);
             }
         }
     }
@@ -212,6 +217,12 @@ export function drawImages(layer, { name, items = [] }) {
             return image.x;
         })
         .attr("y", function (image) {
+            return image.y;
+        })
+        .attr("cx", function (image) {
+            return image.x;
+        })
+        .attr("cy", function (image) {
             return image.y;
         })
         .attr("width", function (image) {

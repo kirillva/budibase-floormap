@@ -23,12 +23,9 @@
     export let positionsProvider;
     export let evacuationProvider;
 
-    // export let onChangeZone;
-    export let onSelectZone;
-
-    // export let onChangeSensor;
-    export let onSelectSensor;
-
+    export let onSave;
+    export let onSelect;
+    
     let svg;
     let g;
 
@@ -45,7 +42,9 @@
     $: sensorLayer = null;
     $: zonesLayer = null;
     $: evacLayer = null;
-
+    $: positionLayer = null;
+    
+    const editable = true;
 
     $: floors =
         floorProvider?.rows?.map((item) => ({
@@ -92,30 +91,13 @@
             h: 32,
         })) ?? [];
 
-    $: ble_signals = [];
-    // positionsProvider?.rows?.map((item) => ({
-    //     id: item.id,
-    //     sensor_id: item.sensor_id,
-    //     distance: item.distance,
-    // })) ?? [];
-
-    $: {
-        const sensors_obj = {};
-        sensors.forEach((item) => {
-            sensors_obj[item.id] = item;
-        });
-
-        ble_signals = ble_signals.map((item) => {
-            const sensor = sensors_obj[item.sensor_id];
-            return {
-                id: item.sensor_id,
-                x: sensor.x,
-                y: sensor.y,
-                z: sensor.floor * 500,
-                distance: item.distance,
-            };
-        });
-    }
+    $: ble_signals = positionsProvider?.rows?.map((item) => ({
+        id: item.id,
+        sensor_id: item.sensor_id,
+        distance: item.distance,
+        user_id: item.user_id,
+        datetime: item.datetime
+    })) ?? [];
 
     function togglePolygons(visible) {
         polygonsVisible = visible;
@@ -156,36 +138,14 @@
             h: 32,
         };
         sensors = [...sensors, sensor];
-        // map.addSensor(g, sensor);
     }
 
     function onCreateZone() {
-        // console.log(zones, sensors, evac_routes);
         zoneDrawing = true;
-        // zones
-        // var zonePolyPoints = [];
-        // var zone = {
-        //     id: uuid(),
-        //     name: uuid(),
-        //     points: zonePolyPoints,
-        // };
-        // zones.push(zone);
-        // map.drawZonePolygon(g, zone);
     }
 
     function onCreateEvacuation() {
         evacuationDrawing = true;
-        // evacuationFrom = null;
-        // evacuationDrawing = true;
-
-        // var zonePolyPoints = [];
-        // var zone = {
-        //     id: uuid(),
-        //     name: uuid(),
-        //     points: zonePolyPoints,
-        // };
-        // zones.push(zone);
-        // map.drawZonePolygon(g, zone);
     }
     
     function onClearEvacuation() {
@@ -194,127 +154,13 @@
 
         evac_routes = evac_routes.filter(item => item.from != zones[zoneIndex].id && item.to != zones[zoneIndex].id)
         evac_routes = [...evac_routes.map(item=>({...item }))];
-        // evacuationFrom = null;
-        // evacuationDrawing = true;
-
-        // var zonePolyPoints = [];
-        // var zone = {
-        //     id: uuid(),
-        //     name: uuid(),
-        //     points: zonePolyPoints,
-        // };
-        // zones.push(zone);
-        // map.drawZonePolygon(g, zone);
     }
 
     function zoomed() {
         g.attr("transform", d3.event.transform);
     }
 
-    // var map = floorplan();
-
-    // function update(zones, floors, sensors, floor_id) {
-    //     if (!svg || svg.empty()) return;
-
-    //     if (!g) {
-    //         g = svg.append("g");
-    //     }
-
-    //     map.clear();
-
-    //     var floor = floors.filter((item) => item.id == floor_id);
-    //     const { w, h } = floor[0]?.image || {};
-    //     width = w;
-    //     height = h;
-
-    //     // console.log('floor', floor);
-
-    //     map.imageLayers(g, floor);
-    //     map.zonePolygons(
-    //         g,
-    //         zones.filter((item) => item.floor == floor_id),
-    //         (item) =>
-    //             _onSelectZone({
-    //                 ...item,
-    //                 floor: current_floor,
-    //             }),
-    //     );
-    //     map.sensorImageLayer(
-    //         g,
-    //         sensors.filter((item) => item.floor == floor_id),
-    //         (item) =>
-    //             _onSelectSensor({
-    //                 ...item,
-    //                 floor: current_floor,
-    //             }),
-    //     );
-
-    //     map.evacuationLayer(g, evac_routes);
-
-    //     var zoom = d3
-    //         .zoom()
-    //         .scaleExtent([1, Infinity])
-    //         .translateExtent([
-    //             [0, 0],
-    //             [width, height],
-    //         ])
-    //         .extent([
-    //             [0, 0],
-    //             [width, height],
-    //         ])
-    //         .on("zoom", zoomed);
-
-    //     svg.call(zoom);
-
-    //     // debugger;
-
-    //     // console.log("ble_signals", ble_signals);
-
-    //     // const pos = getPosition(ble_signals);
-    //     // var start = Date.now();
-    //     // var positions = [];
-    //     // for (var j = 0; j < 10000; j++) {
-    //     //     positions.push({
-    //     //         x: Math.random() * 1000,
-    //     //         y: Math.random() * 1000,
-    //     //         z: Math.random() * 1000,
-    //     //         distance: Math.random() * 500,
-    //     //     })
-    //     // }
-    //     // const pos = getPosition(positions);
-    //     // console.log(Date.now() - start, pos);
-
-    //     // console.log("pos", pos);
-    //     // const pos = getPosition([
-    //     //     {
-    //     //         x: 0,
-    //     //         y: 0,
-    //     //         z: 0,
-    //     //         distance: 0.866,
-    //     //     },
-    //     //     {
-    //     //         x: 1,
-    //     //         y: 1,
-    //     //         z: 1,
-    //     //         distance: 0.866,
-    //     //     },
-    //     //     {
-    //     //         x: 0,
-    //     //         y: 1,
-    //     //         z: 0,
-    //     //         distance: 0.866,
-    //     //     },
-    //     //     {
-    //     //         x: 1,
-    //     //         y: 0,
-    //     //         z: 1,
-    //     //         distance: 0.866,
-    //     //     },
-    //     // ]);
-    // }
-
     $: {
-        // console.log('evac_routes', evac_routes)
         if (floorLayer) {
             const floorItems = drawImages(floorLayer, {
                 name: "floor-1",
@@ -329,6 +175,8 @@
             });
 
             floorItems?.on("click", function(sender){
+                if (!editable) return;
+
                 zones = zones.map(item=>({...item, selected: false}));
             });
 
@@ -351,6 +199,8 @@
             });
             sensorItems?.call(
                 d3.drag().on("end", function (sender) {
+                    if (!editable) return;
+
                     const index = sensors.findIndex(item=>item.id == sender.id);
                     sensors[index] = {...sensors[index], x: d3.event.x, y: d3.event.y};
                     sensors = [...sensors];
@@ -371,6 +221,8 @@
                 });
 
             zoneLineItems?.on("click", function(sender){
+                if (!editable) return;
+
                 const index = zones.findIndex(item=>item.id == sender.polygon);
                 const points = zones[index].points;
                 const item = [d3.event.offsetX, d3.event.offsetY];
@@ -382,6 +234,8 @@
                 zones = [...zones];
             });
             zonesItems?.on("click", function(sender){
+                if (!editable) return;
+                
                 const index = zones.findIndex(item=>item.id == sender.id);
                 const fromIndex = zones.findIndex(item=>item.selected == true);
                 if (evacuationDrawing && fromIndex >= 0) {
@@ -400,6 +254,7 @@
             });
             zonesItems?.call(
                 d3.drag().on("end", function (sender) {
+                    if (!editable) return;
                     if (!sender.selected) return;
 
                     const index = zones.findIndex(item=>item.id == sender.id);
@@ -414,8 +269,9 @@
                 }),
             );
             zonePointItems?.on("click", function(sender){
+                if (!editable) return;
+
                 const index = zones.findIndex(item=>item.id == sender.polygon);
-                debugger;
                 if (sender.id == 0) {
                     zones[index].creating = false;
                     zoneDrawing = false;
@@ -425,6 +281,8 @@
 
             zonePointItems?.call(
                 d3.drag().on("end", function (sender) {
+                    if (!editable) return;
+
                     const index = zones.findIndex(item=>item.id == sender.polygon);
                     zones[index].points[sender.id] = [d3.event.x, d3.event.y]
                     zones = [...zones]
@@ -450,6 +308,41 @@
                     };
                 }),
             });
+        }
+
+        if (positionLayer) {
+            const sensors_obj = {};
+            sensors.forEach((item) => {
+                sensors_obj[item.id] = item;
+            });
+
+            const ble_signal_positions = ble_signals.map((item) => {
+                const sensor = sensors_obj[item.sensor_id];
+                return {
+                    id: item.id,
+                    sensor_id: item.sensor_id,
+                    distance: item.distance,
+                    user_id: item.user_id,
+                    datetime: item.datetime,
+                    x: sensor.x,
+                    y: sensor.y,
+                    z: sensor.floor * 500,
+                };
+            });
+            const pos = getPosition(ble_signal_positions);
+            console.log('pos', pos);
+            if (pos) {
+                drawImages(positionLayer, {
+                    name: "position-1",
+                    items: [{
+                        id: 0,
+                        x: pos.x,
+                        y: pos.y,
+                        w: 32,
+                        h: 32,
+                    }]
+                });
+            }
         }
 
         const zoom = d3
@@ -478,9 +371,9 @@
         g = svg.append("g");
 
         g?.on("click", function(sender){
-            // debugger;
+            if (!editable) return;
             if (!zoneDrawing) return;
-            // sender.id
+            
             const creatingZoneIndex = zones.findIndex(item=>item.creating == true);
             if (creatingZoneIndex < 0) {
                 const index = uuid();
@@ -496,17 +389,6 @@
                 zones[creatingZoneIndex].points.push([d3.event.offsetX, d3.event.offsetY]);
                 zones = [...zones];
             }
-            // console.log("zoneDrawing", creatingZone);
-            
-            // const index = zones.findIndex(item=>item.id == sender.polygon);
-            // const points = zones[index].points;
-            // const item = [d3.event.offsetX, d3.event.offsetY];
-            // zones[index].points = [
-            //     ...points.slice(0, sender.index + 1), 
-            //     item, 
-            //     ...points.slice(sender.index + 1)
-            // ]
-            // zones = [...zones];
         });
 
         
@@ -529,6 +411,13 @@
             evacLayer = addLayer(g, {
                 name: "evacuation",
                 className: "evacuation",
+            });
+        }
+
+        if (!positionLayer) {
+            positionLayer = addLayer(g, {
+                name: "positions",
+                className: "positions",
             });
         }
     });
@@ -594,32 +483,31 @@
 
 <div use:styleable={$component.styles}>
     <div class="buttons">
-        <button
-            disabled={zoneDrawing}
-            class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
-            on:click={onCreateZone}>Create Zone</button
-        >
-        <button
-            class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
-            on:click={onCreateSensor}>Place sensor</button
-        >
-        <button
-            disabled={evacuationDrawing}
-            class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
-            on:click={onCreateEvacuation}>Create evacuation</button
-        >
-        <button
-            class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
-            on:click={onClearEvacuation}>Clear evacuation</button
-        >
-        
+        {#if editable}
+            <button
+                disabled={zoneDrawing}
+                class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
+                on:click={onCreateZone}>Create Zone</button
+            >
+            <button
+                class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
+                on:click={onCreateSensor}>Place sensor</button
+            >
+            <button
+                disabled={evacuationDrawing}
+                class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
+                on:click={onCreateEvacuation}>Create evacuation</button
+            >
+            <button
+                class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
+                on:click={onClearEvacuation}>Clear evacuation</button
+            >
+        {/if}
         {#each floors as floor}
             <button
                 class={`spectrum-Button spectrum-Button--sizeM spectrum-Button--cta gap-M svelte-4lnozm`}
                 on:click={() => {
                     current_floor = floor.id;
-                    // _onSelectZone(null);
-                    // _onSelectSensor(null);
                 }}
             >
                 {floor.id}
